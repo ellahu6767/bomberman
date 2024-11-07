@@ -1,0 +1,3 @@
+[submodule "mpbomberman_racket"]
+	path = mpbomberman_racket
+	url = https://github.com/Leystryku/mpbomberman_racket.git
