@@ -1,6 +1,6 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
-#reader(lib "htdp-advanced-reader.ss" "lang")((modname |map1 and the map of vector|) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
+#reader(lib "htdp-advanced-reader.ss" "lang")((modname test) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
 (require 2htdp/image)
 (require 2htdp/universe)
 
@@ -61,8 +61,9 @@
 
 
 ;constant definitions
-(define CELL-SIZE 20)
+(define CELL-SIZE 30)
 (define player-image (circle 15 "solid" "red"))
+(define velocity 20)
 
 ; axiom:
 ; axiom is a (vector (vector..))
@@ -120,7 +121,8 @@
            [(char=? char #\.) "white"]
            [(char=? char #\*) "black"]
            [(char=? char #\S) "blue"]
-           [(char=? char #\B) "black"])))
+           [(char=? char #\B) "black"]
+           [(char=? char #\T) "red"])))
     (overlay
      (rectangle CELL-SIZE CELL-SIZE "outline" "black")  
      (rectangle CELL-SIZE CELL-SIZE "solid" fill-color))))  
@@ -201,7 +203,7 @@
                   (+ (posn-y
                       (player1-posn
                        (gamestate-player1 gamestate)))
-                     1))
+                     velocity))
                  #f)
    (gamestate-player2 gamestate)))
 
@@ -216,7 +218,7 @@
                   (- (posn-y
                       (player1-posn
                        (gamestate-player1 gamestate)))
-                     1))
+                     velocity))
                  #f)
    (gamestate-player2 gamestate)))
 
@@ -229,7 +231,7 @@
                    (posn-x
                    (player1-posn
                     (gamestate-player1 gamestate)))
-                   1)
+                   velocity)
                   (posn-y
                       (player1-posn
                        (gamestate-player1 gamestate))))
@@ -245,7 +247,7 @@
                    (posn-x
                    (player1-posn
                     (gamestate-player1 gamestate)))
-                   1)
+                   velocity)
                   (posn-y
                       (player1-posn
                        (gamestate-player1 gamestate))))
@@ -285,6 +287,10 @@
     [else gamestate]))
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;on-tick
+
 ;auxilirary function
 
 ;list<bomb> -> list<bomb>
@@ -297,55 +303,79 @@
 
            
 ;;;;;;;question
-;;;;;;;negative number handle
 ;;;;;;;how to use map of the one field of the list of structure elegantly
  
 
-
-
 ;auxiliary functions
 ;list<bomb> -> Boolean
-(define (check-zero? lob)
+(define (check-two? lob)
   (cond
     [(empty? lob) #f]
     [else
      (if
-     (<= (bomb!-countdown (first lob)) 0)
+     (<= (bomb!-countdown (first lob)) 2)
      #t
-     (check-zero? (rest lob)))]))
+     (check-two? (rest lob)))]))
 
+;;constant defintions
 (define boom-distance 3)
 
 
 
 ;boom-cor:
-;cor -> list<cor>
+;list<bomb> -> list<cor>
 ;examples
 ;bomb boom in (5,5)
 ;(5+- 5, 5+-5) will be convert to #\.)
 
 ;;这个function不像人写的，后面想想怎么优化
-(define (boom-cor cor)
-  (append
-   (list (make-cor (- (cor-column cor) 1) (cor-row cor))
-         (make-cor (- (cor-column cor) 2) (cor-row cor))
-         (make-cor (- (cor-column cor) 3) (cor-row cor)))
-   (list (make-cor (+ (cor-column cor) 1) (cor-row cor))
-         (make-cor (+ (cor-column cor) 2) (cor-row cor))
-         (make-cor (+ (cor-column cor) 3) (cor-row cor)))
-   (list (make-cor (cor-column cor) (- (cor-row cor) 1))
-         (make-cor (cor-column cor) (- (cor-row cor) 2))
-         (make-cor (cor-column cor) (- (cor-row cor) 3)))
-   (list (make-cor (cor-column cor) (+ (cor-row cor) 1))
-         (make-cor (cor-column cor) (+ (cor-row cor) 2))
-         (make-cor (cor-column cor) (+ (cor-row cor) 3)))))
+;;11.9 发现input错了，但是没改写法，后面一定想想怎么改
+; list<bomb!> -> list<cor>
+(define (boom-cor bomb-list)
+  (if (empty? bomb-list)
+      '()
+      (append
+       (list
+        (make-cor (cor-column (bomb!-cor (first bomb-list)))
+                  (cor-row (bomb!-cor (first bomb-list)))))
+       (list 
+         (make-cor (- (cor-column (bomb!-cor (first bomb-list))) 1) 
+                  (cor-row (bomb!-cor (first bomb-list))))
+         (make-cor (- (cor-column (bomb!-cor (first bomb-list))) 2) 
+                  (cor-row (bomb!-cor (first bomb-list))))
+         (make-cor (- (cor-column (bomb!-cor (first bomb-list))) 3) 
+                  (cor-row (bomb!-cor (first bomb-list)))))
+       (list 
+         (make-cor (+ (cor-column (bomb!-cor (first bomb-list))) 1) 
+                  (cor-row (bomb!-cor (first bomb-list))))
+         (make-cor (+ (cor-column (bomb!-cor (first bomb-list))) 2) 
+                  (cor-row (bomb!-cor (first bomb-list))))
+         (make-cor (+ (cor-column (bomb!-cor (first bomb-list))) 3) 
+                  (cor-row (bomb!-cor (first bomb-list)))))
+       (list 
+         (make-cor (cor-column (bomb!-cor (first bomb-list))) 
+                  (- (cor-row (bomb!-cor (first bomb-list))) 1))
+         (make-cor (cor-column (bomb!-cor (first bomb-list))) 
+                  (- (cor-row (bomb!-cor (first bomb-list))) 2))
+         (make-cor (cor-column (bomb!-cor (first bomb-list))) 
+                  (- (cor-row (bomb!-cor (first bomb-list))) 3)))
+       (list 
+         (make-cor (cor-column (bomb!-cor (first bomb-list))) 
+                  (+ (cor-row (bomb!-cor (first bomb-list))) 1))
+         (make-cor (cor-column (bomb!-cor (first bomb-list))) 
+                  (+ (cor-row (bomb!-cor (first bomb-list))) 2))
+         (make-cor (cor-column (bomb!-cor (first bomb-list))) 
+                  (+ (cor-row (bomb!-cor (first bomb-list))) 3)))
+       (boom-cor (rest bomb-list)))))
+
+
 
   
 ;;这里想想能不能优化一下
 ;; apply-convert-to-list:
 ;; vector (list of cor) char -> vector
 (define (apply-convert-to-list map cor-list char)
-  (if (null? cor-list)
+  (if (empty? cor-list)
       map  
       (apply-convert-to-list 
        (convert map (first cor-list) char)  
@@ -360,10 +390,9 @@
   (make-gamestate
    (apply-convert-to-list
     (gamestate-map gamestate)
-    (boom-cor (bomb!-cor (first (gamestate-bomb gamestate))))  
-    #\.)  ; 
- 
-   (rest (gamestate-bomb gamestate)) 
+    (boom-cor (gamestate-bomb gamestate))  
+    #\T)  ; 
+   (new-timer (gamestate-bomb gamestate))
    (gamestate-player1 gamestate)
    (gamestate-player2 gamestate)))
 
@@ -372,32 +401,66 @@
   ;; (gamestate-bomb gamestate)
   ;; (gamestate-player1 gamestate)
   ;; (gamestate-player2 gamestate)))
+
+
+;;gamestate -> Boolean
+;list<bomb> -> Boolean
+(define (check-zero? lob)
+  (cond
+    [(empty? lob) #f]
+    [else
+     (if
+     (<= (bomb!-countdown (first lob)) 0)
+     #t
+     (check-zero? (rest lob)))]))
+
+;;gamestate -> gamestate
+(define (bomb-end gamestate)
+  (make-gamestate
+   (apply-convert-to-list
+    (gamestate-map gamestate)
+    (boom-cor (gamestate-bomb gamestate))  
+    #\.)
+    (remove-bomb! (gamestate-bomb gamestate))
+    (gamestate-player1 gamestate)
+    (gamestate-player2 gamestate)))
+
+;;list<bomb!> -> list<bomb!>
+(define (remove-bomb! lob)
+  (cond
+    [(empty? lob) '()]
+    [else
+     (if
+      (= (bomb!-countdown (first lob)) 0)
+      (rest lob)
+      (remove-bomb! (rest lob)))]))
     
               
-       
 ;gamestate -> gamestate
 (define (time-control gamestate)
-  (cond
-    [(check-zero? (gamestate-bomb gamestate))
-     (boom! gamestate)]
-    [else
-    (make-gamestate (gamestate-map gamestate)
-                    (new-timer (gamestate-bomb gamestate))
-                    (gamestate-player1 gamestate)
-                    (gamestate-player2 gamestate))]))
-    ;;mark: we should try to merge check-zero of each boom! and 爆炸特效;;
-    ;; think about use negetive number here ,zero means boom, -3 means 爆炸特效消失
-    ;; notice that the textbook disencourage us to use negetive number
-  ;; [(check-negetive3? (gamestate
+  (let ((updated-gamestate
+         (make-gamestate (gamestate-map gamestate)
+                         (new-timer (gamestate-bomb gamestate))
+                         (gamestate-player1 gamestate)
+                         (gamestate-player2 gamestate))))
+    (cond
+      [(check-zero? (gamestate-bomb updated-gamestate))
+       (bomb-end updated-gamestate)]
+      [(check-two? (gamestate-bomb updated-gamestate))
+       (boom! updated-gamestate)]
+      [else
+       updated-gamestate])))
+
    
-  
+
+   
               
 ;main function
 (define (main gamestate)
   (big-bang gamestate
     [to-draw render]
     [on-key move]
-    [on-tick time-control]))
+    [on-tick time-control 1]))
               
 (define initial-state
   (make-gamestate
@@ -437,6 +500,51 @@
 ;;4.
 ;;convert如何处理一个list<cor>
 
+
+;;11.9
+
+;;5.
+
+;;mark: we should try to merge check-zero of each boom! and 爆炸特效;;
+;; think about use negetive number here ,zero means boom, -3 means 爆炸特效消失
+;; notice that the textbook disencourage us to use negetive number
+;; [(check-negetive3? (gamestate
+
+;;对于以上问题
+;;想到可以从6开始计数
+;;2=炸弹爆炸,#\T
+;;0=特效结束
+;;这样避免了使用负数
+
+;;6.
+;;time control 使用cond的逻辑问题
+;;cond会直接返回第一个满足条件的condition
+;;想到可以先check-zero？
+;;then check-two?
+;;but it still not work after the first bomb
+;;发现问题在于没有移除炸弹，导致第一个炸弹归0之后auxiliary
+;;function always return #t
+;;so condition (check-zero?) always #t
+;;添加移除炸弹的function解决问题？
+
+;;7.
+;;发现同时放置多个炸弹只处理最后一个
+;;意料之中，毕竟list<cor>function写的太烂了
+;;发现是因为input/output错了，应该是list->list
+
+
+;;8.
+;;发现round（posn）返回的cor非常不准确
+;;留着以后改
+;;当然，这个问题实际上非常重要
+;;他同时涉及到dead？的检测，属于游戏核心玩法
+;;至少要实现视觉效果和实际效果接近
+
+
+;;9
+;;主要功能还差：
+;;1. 边界检测
+;;2. 对于不可破坏的墙的检测
 
 
 
