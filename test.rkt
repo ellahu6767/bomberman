@@ -4,6 +4,7 @@
 (require 2htdp/image)
 (require 2htdp/universe)
 
+
 ;define the function vector-map
 ;function is same to map but can used in vector
 ;(vector-map f vec) = (map f vec)
@@ -62,7 +63,7 @@
 
 ;constant definitions
 (define CELL-SIZE 30)
-(define player-image (circle 15 "solid" "red"))
+(define player-image (circle 10 "solid" "red"))
 (define velocity 20)
 
 ; axiom:
@@ -72,8 +73,8 @@
 ; use string to represent the type of the elements in the map
 
 ; S = safe area
-; * = green area (can be dismentaled)
-; # = black area (can not be dismentaled)
+; # = green area (can be dismentaled)
+; * = black area (can not be dismentaled)
 ; . =white area (corrider)
 (define axiom
   (vector
@@ -168,8 +169,9 @@
 ;Posn -> Coordinate
 (define (nearest-cor posn)
   (make-cor
-  (round (/ (posn-x posn) CELL-SIZE))
-  (round (/ (posn-y posn) CELL-SIZE))))
+   (floor (/ (posn-x posn) CELL-SIZE))
+   (floor (/ (posn-y posn) CELL-SIZE))))
+
   
 
 ;gamestate -> gamestate
@@ -256,35 +258,58 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;gamestate ke -> gamestate
+;; check-border: gamestate cor -> Boolean
+
+(define (check-border gamestate cor)
+  (and (<= 0 (cor-column cor) 14)   
+       (<= 0 (cor-row cor) 10)      
+       (let ((element (get-element (gamestate-map gamestate) cor)))
+         (not (or (char=? element #\#)
+                  (char=? element #\*))))))
+
+
+;; move: gamestate key -> gamestate
 (define (move gamestate ke)
   (cond
-    [(string=? "down" ke)
-     ;;(check-barrier?)
-     (move-down gamestate)]
+    [(string=? ke "down")
+     (let* ((player (gamestate-player1 gamestate))
+            (new-pos (make-posn (posn-x (player1-posn player))
+                                 (+ (posn-y (player1-posn player)) velocity)))
+            (new-cor (nearest-cor new-pos)))
+       (if (check-border gamestate new-cor)
+           (move-down gamestate)
+           gamestate))]
+    [(string=? ke "up")
+     (let* ((player (gamestate-player1 gamestate))
+            (new-pos (make-posn (posn-x (player1-posn player))
+                                 (- (posn-y (player1-posn player)) velocity)))
+            (new-cor (nearest-cor new-pos)))
+       (if (check-border gamestate new-cor)
+           (move-up gamestate)
+           gamestate))]
+    [(string=? ke "left")
+     (let* ((player (gamestate-player1 gamestate))
+            (new-pos (make-posn (- (posn-x (player1-posn player)) velocity)
+                                 (posn-y (player1-posn player))))
+            (new-cor (nearest-cor new-pos)))
+       (if (check-border gamestate new-cor)
+           (move-left gamestate)
+           gamestate))]
+    [(string=? ke "right")
+     (let* ((player (gamestate-player1 gamestate))
+            (new-pos (make-posn (+ (posn-x (player1-posn player)) velocity)
+                                 (posn-y (player1-posn player))))
+            (new-cor (nearest-cor new-pos)))
+       (if (check-border gamestate new-cor)
+           (move-right gamestate)
+           gamestate))]
+    [(string=? ke "a")
+     (put-bomb gamestate)] 
+    [else gamestate]))
 
-    [(string=? "up" ke)
-     ;;(check-barrier?)
-     (move-up gamestate)]
-
-    [(string=? "right" ke)
-     ;;(check-barrier?)
-     (move-right gamestate)]
-
-    [(string=? "left" ke)
-     ;;(check-barrier?)
-     (move-left gamestate)]
 
     
 
-    ;;.... up left right
-
-    ;;bomb
-    [(string=? "a" ke)
-     ;;(check-bomb?)
-     (put-bomb gamestate)]
-                
-    [else gamestate]))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -330,43 +355,41 @@
 
 ;;这个function不像人写的，后面想想怎么优化
 ;;11.9 发现input错了，但是没改写法，后面一定想想怎么改
-; list<bomb!> -> list<cor>
-(define (boom-cor bomb-list)
+;;11.10加入条件检查，修改部分代码
+
+
+;cor -> char
+;get the char in a certain cor
+(define (get-element vec cor)
+  (vector-ref
+   (vector-ref vec (cor-row cor))
+   (cor-column cor)))
+
+
+
+; list<bomb!> vec -> list<cor>
+(define (boom-cor bomb-list vec)
   (if (empty? bomb-list)
       '()
-      (append
-       (list
-        (make-cor (cor-column (bomb!-cor (first bomb-list)))
-                  (cor-row (bomb!-cor (first bomb-list)))))
-       (list 
-         (make-cor (- (cor-column (bomb!-cor (first bomb-list))) 1) 
-                  (cor-row (bomb!-cor (first bomb-list))))
-         (make-cor (- (cor-column (bomb!-cor (first bomb-list))) 2) 
-                  (cor-row (bomb!-cor (first bomb-list))))
-         (make-cor (- (cor-column (bomb!-cor (first bomb-list))) 3) 
-                  (cor-row (bomb!-cor (first bomb-list)))))
-       (list 
-         (make-cor (+ (cor-column (bomb!-cor (first bomb-list))) 1) 
-                  (cor-row (bomb!-cor (first bomb-list))))
-         (make-cor (+ (cor-column (bomb!-cor (first bomb-list))) 2) 
-                  (cor-row (bomb!-cor (first bomb-list))))
-         (make-cor (+ (cor-column (bomb!-cor (first bomb-list))) 3) 
-                  (cor-row (bomb!-cor (first bomb-list)))))
-       (list 
-         (make-cor (cor-column (bomb!-cor (first bomb-list))) 
-                  (- (cor-row (bomb!-cor (first bomb-list))) 1))
-         (make-cor (cor-column (bomb!-cor (first bomb-list))) 
-                  (- (cor-row (bomb!-cor (first bomb-list))) 2))
-         (make-cor (cor-column (bomb!-cor (first bomb-list))) 
-                  (- (cor-row (bomb!-cor (first bomb-list))) 3)))
-       (list 
-         (make-cor (cor-column (bomb!-cor (first bomb-list))) 
-                  (+ (cor-row (bomb!-cor (first bomb-list))) 1))
-         (make-cor (cor-column (bomb!-cor (first bomb-list))) 
-                  (+ (cor-row (bomb!-cor (first bomb-list))) 2))
-         (make-cor (cor-column (bomb!-cor (first bomb-list))) 
-                  (+ (cor-row (bomb!-cor (first bomb-list))) 3)))
-       (boom-cor (rest bomb-list)))))
+      (let* ((center (bomb!-cor (first bomb-list)))
+             (cx (cor-column center))
+             (cy (cor-row center))
+             (potential-coords 
+               (append
+                (list (make-cor cx cy))
+                (list (make-cor (- cx 1) cy) (make-cor (- cx 2) cy) (make-cor (- cx 3) cy))
+                (list (make-cor (+ cx 1) cy) (make-cor (+ cx 2) cy) (make-cor (+ cx 3) cy))
+                (list (make-cor cx (- cy 1)) (make-cor cx (- cy 2)) (make-cor cx (- cy 3)))
+                (list (make-cor cx (+ cy 1)) (make-cor cx (+ cy 2)) (make-cor cx (+ cy 3))))))
+        (append
+         (filter (lambda (coord)
+                   (and
+                    (<= 0 (cor-column coord) 14)
+                    (<= 0 (cor-row coord) 10)
+                    (not (char=? #\* (get-element vec coord)))))
+                 potential-coords)
+         (boom-cor (rest bomb-list) vec)))))
+
 
 
 
@@ -390,7 +413,8 @@
   (make-gamestate
    (apply-convert-to-list
     (gamestate-map gamestate)
-    (boom-cor (gamestate-bomb gamestate))  
+    (boom-cor (gamestate-bomb gamestate)
+              (gamestate-map gamestate))  
     #\T)  ; 
    (new-timer (gamestate-bomb gamestate))
    (gamestate-player1 gamestate)
@@ -419,7 +443,8 @@
   (make-gamestate
    (apply-convert-to-list
     (gamestate-map gamestate)
-    (boom-cor (gamestate-bomb gamestate))  
+    (boom-cor (gamestate-bomb gamestate)
+              (gamestate-map gamestate))  
     #\.)
     (remove-bomb! (gamestate-bomb gamestate))
     (gamestate-player1 gamestate)
@@ -555,6 +580,33 @@
 ;;主要功能还差：
 ;;1. 边界检测
 ;;2. 对于不可破坏的墙的检测
+
+;;11.10
+;;加入了炸弹爆炸的边际检测
+;;1.渲染的逻辑应该是：一个方向只要遇到墙就不渲染
+;;但目前的情况是：只有遇到墙的cell不渲染
+
+;;2.主要功能完全实现
+;;剩下：
+;;今天发现的问题1.
+;;炸弹的链式反应处理
+;;新的data definitions 要更改一些，但都是小功能，很好实现
+
+
+;;难度上看
+;;on-tick最难(造了convert 和 get-element）,大量recursion，耗时最长
+;;接着是render 地图部分(需要自己造vector-map，学生语言没有这个）
+;;on-key 因为已经造了 get-element，所以难度适中
+;;stop-when = render 开始菜单 = render countdown栏 ，这三个比较容易
+
+;;难以定义的难度：
+;;绘图/图像处理
+
+
+
+
+
+
 
 
 
