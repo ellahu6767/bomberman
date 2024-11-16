@@ -1,6 +1,15 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
-#reader(lib "htdp-advanced-reader.ss" "lang")((modname draft) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
+#reader(lib "htdp-advanced-reader.ss" "lang")((modname |data definitions|) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
+;timeline
+;30 nov: all rkt files
+;1 dec: 整合+教学+check the tests +写文档
+
+;分工：
+;cheng：stop-when on-tick decoration maze
+;hu： render on-key
+
+
 ;gamestate is a structure
 (define-struct gamestate [layout bomb player1 player2 roundtimer maximum])
 
