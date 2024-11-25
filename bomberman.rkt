@@ -6,6 +6,7 @@
 (require 2htdp/universe)
 ;;搜索*****查看待处理问题
 
+
 (define (vector-map f vec)
   (let ((len (vector-length vec))) ;get the length
     (let ((result (make-vector len))) ;store the result
@@ -72,29 +73,32 @@
 (define layout1 (generate-layout base))
 
 
-(define CELL-SIZE (image-width (bitmap "D.png")))
+(define CELL-SIZE (image-width (bitmap "W.png")))
 (define player-image (circle (/ CELL-SIZE 2) "solid" "red"))
-(define velocity (/ CELL-SIZE 2))
+(define velocity (/ CELL-SIZE 8))
+(define half-size (/ (image-width player-image) 2))
 
 
 (define (render-cell symbol)
-  (cond
-    [(symbol=? symbol 'D) (bitmap "D.png")]
-    [(symbol=? symbol 'U) (bitmap "U.png")]
-    [(symbol=? symbol 'S) (bitmap "W.png")]
-    [(symbol=? symbol 'B) (bitmap "B.png")]
-    [(symbol=? symbol 'W) (bitmap "W.png")]
-    [(symbol=? symbol 'T) (overlay
-     (rectangle CELL-SIZE CELL-SIZE "outline" "black")  
-     (rectangle CELL-SIZE CELL-SIZE "solid" "red"))]))
+  (crop 0 0 CELL-SIZE CELL-SIZE
+        (cond
+          [(symbol=? symbol 'D) (bitmap "D.png")]
+          [(symbol=? symbol 'U) (bitmap "U.png")]
+          [(symbol=? symbol 'S) (bitmap "W.png")]
+          [(symbol=? symbol 'B) (bitmap "B.png")]
+          [(symbol=? symbol 'W) (bitmap "W.png")]
+          [(symbol=? symbol 'T) (overlay
+                                 (rectangle CELL-SIZE CELL-SIZE "outline" "black")  
+                                 (rectangle CELL-SIZE CELL-SIZE "solid" "red"))])))
+
     
 
 ; auxiliary function
-(define (combine-images-left-right vec)
-  (let loop ((i 0) (n (vector-length vec)) (acc empty-image))
+(define (combine-images-left-right layout)
+  (let loop ((i 0) (n (vector-length layout)) (acc empty-image))
     (if (>= i n)
         acc
-        (loop (+ i 1) n (beside acc (render-cell (vector-ref vec i)))))))
+        (loop (+ i 1) n (beside acc (render-cell (vector-ref layout i)))))))
 
 
 ; render-map
@@ -399,9 +403,11 @@
 
 ;cor layout -> symbol
 (define (get-symbol layout cor)
+  (if (in-bound? layout cor)
   (vector-ref
    (vector-ref layout (cor-row cor))
-   (cor-column cor)))
+   (cor-column cor))
+  #false))
 
 
 
@@ -509,69 +515,59 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;boom;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;gamestate -> gamestate 
 ;question
-;*****这里想想能不能用递归实现
-;*****想想怎么把调用的boom-range传递给boom-end
+;*****这里想想能不能用递归实现 实现了
+;*****想想怎么把调用的boom-range传递给boom-end;;;可能要改data definition 新增一个list每次在这里传递，在end清除
 (define (boom gamestate)
   (let* (
          [bomb-list (gamestate-bomb gamestate)]
          [layout (gamestate-layout gamestate)]
-
-         ;get the countdown=2 bomb-list
-         [exploding-list
-          (filter
-           (lambda(bombstate)
-             (= (bombstate-countdown bombstate) 2))
-             bomb-list)]
-
-         ;calculate boom-range of exploding-list
-         [initial-boom-cor (boom-range exploding-list layout)]
-
-         ;apply chain-explosion to get the final-exploding-list
-         [final-exploding-list
-          (chain-explosion initial-boom-cor bomb-list layout)]
-
-         ;get the countdown=2 bomb-list agagin
-         [updated-exploding-list
-          (filter
-           (lambda(bombstate)
-             (= (bombstate-countdown bombstate) 2))
-           final-exploding-list)]
-
-         ;calculate boom-range agagin
-         [updated-boom-cor (boom-range updated-exploding-list layout)]
-
-         ;calculate final-boom-cor
-         [final-boom-cor (append initial-boom-cor updated-boom-cor)]
-
-         ;;change the layout
-         [new-layout (convert layout
-                              final-boom-cor
-                            'T)]
-         
-         ;;get the new gamestate
-         [new-gamestate
-          (make-gamestate
-           new-layout
-           final-exploding-list
-           (gamestate-player1 gamestate)
-           (gamestate-player2 gamestate)
-           (gamestate-roundtimer gamestate)
-           (gamestate-maximum gamestate))]
          )
-    new-gamestate))
+
+    (let loop (
+               [current-bomb-list bomb-list]
+               [current-layout layout]
+               [processed-bombs '()]
+               )
+      (let* (
+             [exploding-list
+              (filter
+               (lambda (bombstate)
+                 (and (= (bombstate-countdown bombstate) 2)
+                      (not (in-boom-cor? (bombstate-cor bombstate) processed-bombs))))
+               current-bomb-list)]
+             [boom-cor (boom-range exploding-list current-layout)]
+             [updated-bomb-list (chain-explosion boom-cor current-bomb-list current-layout)]
+             [new-processed-bombs (append processed-bombs (map bombstate-cor exploding-list))]
+             [new-layout (convert current-layout boom-cor 'T)]
+             )
+ 
+        (if (empty? exploding-list)
+            (make-gamestate
+             new-layout
+             updated-bomb-list
+             (gamestate-player1 gamestate)
+             (gamestate-player2 gamestate)
+             (gamestate-roundtimer gamestate)
+             (gamestate-maximum gamestate))
+        
+            (loop updated-bomb-list new-layout new-processed-bombs))))))
+
 
 ;chain-explosion:
 ;list-of-cor bomb-list layout -> bomb-list
 ;member不能比较两个structure，需要自定义function
 ;*****
 ;可能是计时器会约等于？？所以时间接近会都算2秒
-;因此不能添加not = 2 约束chain-explosion
+;因此不能添加not = 2 约束chain-explosion？？***** 能添加了 改递归
 ;考虑用别的方法约束，比如自己不算chain-explosion
 (define (chain-explosion initial-boom-cor bomb-list layout)
     (map
      (lambda (bombstate)
              (if 
-               (in-boom-cor? (bombstate-cor bombstate) initial-boom-cor)
+               (and
+
+                (not (= (bombstate-countdown bombstate) 2))
+                (in-boom-cor? (bombstate-cor bombstate) initial-boom-cor))
 
               (begin
                 (printf "炸弹位置 ~a 受chain-explosion影响,倒计时重置为 2。\n" (bombstate-cor bombstate))
@@ -613,10 +609,6 @@
 ;同时移除倒计时为0的炸弹
 ;同时移除拥有者的bombcount（这里多半要改,所以先不写）
 ;因此，他需要调用boom-range以及辅助函数，以及remove-bomb三个辅助函数实现功能
-
-
-
-
 
 (define (boom-end gamestate)
   (let* (
@@ -817,6 +809,14 @@
   (make-cor
    (floor (/ (posn-x posn) CELL-SIZE))
    (floor (/ (posn-y posn) CELL-SIZE))))
+;;这里不能用中心坐标
+;;应该分别用上下左右顶点坐标去计算，以避免出现穿墙行为
+;;想到是否可以把cor的上下左右顶点换算成posn？这样就不需要用floor近似了？*****
+;;新方案：设计一个get-symbol-from-posn和原先的get-symbol-from-cor区分开
+;;知道人物current-posn,计算new-posn，然后get-symbol-from-posn
+;;get-symbol-from-posn访问posn获得symbol
+;;这样可以完全绕开cor，避免posn->cor的精度损失
+;;但是要改data definitino，在layout增加一个list of posn储存每个symbol的posn
 
 
 
@@ -903,8 +903,7 @@
         [current-symbol (get-symbol layout current-cor)]
         [new-symbol (get-symbol layout new-cor)]
         )
-  (and (<= 0 (cor-column new-cor) 14)   
-       (<= 0 (cor-row new-cor) 10)
+  (and (in-bound? layout new-cor)
        (or
         (symbol=? new-symbol 'W)
         (symbol=? new-symbol 'S)
@@ -955,7 +954,7 @@
     (cond
       [(string=? ke "down")
        (let*(
-             [new-posn (make-posn posn-x-player1 (+ posn-y-player1 velocity))]
+             [new-posn (make-posn posn-x-player1 (+ posn-y-player1 velocity half-size))]
 
              [new-cor (nearest-cor new-posn)]
              )
@@ -964,7 +963,7 @@
            gamestate))]
       [(string=? ke "up")
        (let*(
-             [new-posn (make-posn posn-x-player1 (- posn-y-player1 velocity))]
+             [new-posn (make-posn posn-x-player1 (- posn-y-player1 velocity half-size))]
 
              [new-cor (nearest-cor new-posn)]
              )
@@ -973,7 +972,7 @@
            gamestate))]
       [(string=? ke "left")
        (let*(
-             [new-posn (make-posn (- posn-x-player1 velocity) posn-y-player1)]
+             [new-posn (make-posn (- posn-x-player1 velocity half-size) posn-y-player1)]
 
              [new-cor (nearest-cor new-posn)]
              )
@@ -982,7 +981,7 @@
            gamestate))]
       [(string=? ke "right")
        (let*(
-             [new-posn (make-posn (+ posn-x-player1 velocity) posn-y-player1)]
+             [new-posn (make-posn (+ posn-x-player1 velocity half-size) posn-y-player1)]
 
              [new-cor (nearest-cor new-posn)]
              )
@@ -1012,7 +1011,7 @@
   (make-gamestate
    layout1
    '()
-   (make-player1 (make-posn 10 10) #f 0)
+   (make-player1 (make-posn (/ (image-width player-image) 2) (/ (image-height player-image) 2)) #f 0)
    (make-player2 (make-posn 100 100) #f 0)
    120
    3))
