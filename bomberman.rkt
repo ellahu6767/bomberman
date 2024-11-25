@@ -1,6 +1,6 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
-#reader(lib "htdp-advanced-reader.ss" "lang")((modname main) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
+#reader(lib "htdp-advanced-reader.ss" "lang")((modname bomberman) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
 (require racket/base)
 (require 2htdp/image)
 (require 2htdp/universe)
@@ -72,23 +72,22 @@
 (define layout1 (generate-layout base))
 
 
-(define CELL-SIZE 40)
-(define player-image (circle 20 "solid" "red"))
-(define velocity 10)
+(define CELL-SIZE (image-width (bitmap "D.png")))
+(define player-image (circle (/ CELL-SIZE 2) "solid" "red"))
+(define velocity (/ CELL-SIZE 2))
 
 
 (define (render-cell symbol)
-  (let ((fill-color
-         (cond
-           [(symbol=? symbol 'D) "green"]
-           [(symbol=? symbol 'W) "white"]
-           [(symbol=? symbol 'U) "black"]
-           [(symbol=? symbol 'S) "blue"]
-           [(symbol=? symbol 'B) "black"]
-           [(symbol=? symbol 'T) "red"])))
-    (overlay
+  (cond
+    [(symbol=? symbol 'D) (bitmap "D.png")]
+    [(symbol=? symbol 'U) (bitmap "U.png")]
+    [(symbol=? symbol 'S) (bitmap "W.png")]
+    [(symbol=? symbol 'B) (bitmap "B.png")]
+    [(symbol=? symbol 'W) (bitmap "W.png")]
+    [(symbol=? symbol 'T) (overlay
      (rectangle CELL-SIZE CELL-SIZE "outline" "black")  
-     (rectangle CELL-SIZE CELL-SIZE "solid" fill-color))))  
+     (rectangle CELL-SIZE CELL-SIZE "solid" "red"))]))
+    
 
 ; auxiliary function
 (define (combine-images-left-right vec)

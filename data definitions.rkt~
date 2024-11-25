@@ -291,61 +291,6 @@
 ;  initial-player2
 ;  initial-roundtimer
 ;  initial-maximum)
-
-
-
-
-;(define-struct gamestate [layout bomb player1 player2 roundtimer maximum])
-
-
-
-;on-tick
-;gamestate -> gamestate
-(define (timehandler gamestate)
-  (let
-      (
-       [updated-gamestate
-        (make-gamestate
-         (gamestate-layout gamestate)
-         (updated-bomb (gamestate-bomb gamestate))
-         (gamestate-player1 gamestate)
-         (gamestate-player2 gamestate)
-         (updated-roundtimer (gamestate-roundtimer gamestate))
-         (gamestate-maximum gamestate))]
-       )
-    (cond
-      [(check-zero? (gamestate-bomb updated-gamestate))
-       (bomb-end (updated-gamestate))]
-      [(check-two? (gamestate-bomb updated-gamestate))
-       (bomb-boom (updated-gamestate))]
-      [(check-add-maximum? (gamestate-roundtimer updated-gamestate))
-       (add-maximum (updated-gamestate))]
-      [else
-       updated-gamestate])))
-
-;updated-bomb:
-;list<bombstate> -> list<bombstate>
-(define (updated-bomb bomb)
-  (map
-   (lambda (bombstate)
-     (make-bombstate
-      (bombstate-cor bombstate)
-      (max 0 (- (bombstate bombstate) 1))))
-   bomb))
-
-
-
-;auxiliary function
-;bomb -> Boolean
-(define (check-zero? bomb)
-  (cond
-    [(empty? bomb) #f]
-    [else
-     (if
-     (equal? (boomstate-countdown (first bomb)))
-     #t
-     (check-zero? (boomstate-countdown (rest bomb))))]))
-  
   
 
 
