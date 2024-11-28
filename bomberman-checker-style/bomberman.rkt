@@ -11,7 +11,7 @@
 (define MAX-COLS 15)
 
 ;row col -> Boolean
-;rules for generating 'I
+;rules for generating 'U in random-layout
 (define (is-U? row col)
   (and (even? row)          
        (odd? col)          
@@ -21,19 +21,24 @@
        (< col (- MAX-COLS 1))))
 
 ;row col -> Boolean
+;rules for generating 'W1D in random-layout
 (define (is-player1? row col)
   (= 0 (+ row col)))
 
+;row col -> Boolean
+;rules for generating 'W2U in random-layout
 (define (is-player2? row col)
   (= (+ (- MAX-ROWS 1) (- MAX-COLS 1)) (+ row col)))
 
 
 ;row col -> Boolean
-;rules for generating fixed‘W
+;rules for generating fixed 'W in random-layout
 (define (is-fixed-W? row col)
   (or (< 0 (+ row col) 2) 
       (>= (+ row col) (+ (- MAX-ROWS 1) (- MAX-COLS 1) -2))))
 
+;row col -> Boolean
+;rules for generating 'D in homepage
 (define (is-YU? row col)
   (or
    ;;Y shape
@@ -49,7 +54,6 @@
    (and
     (= col 2)
     (<= 2 row 4))
-
    ;;U shape
    (and
     (= col 8)
@@ -61,6 +65,8 @@
     (= row 4)
     (<= 8 col 12))))
 
+;row col -> Boolean
+;rules for generating 'I in homepage
 (define (is-HU? row col)
   (or
    ;;U shape
@@ -73,7 +79,6 @@
    (and
     (= row 10)
     (<= 8 col 12))
-
    ;;H shape
    (and
     (= col 0)
@@ -84,61 +89,51 @@
    (and
     (= row 8)
     (<= 0 col 4))))
-   
-;row
-(define (generate-homepage-row row col acc)
+
+;row col -> symbol
+;rules for generate homepage
+(define (homepage-rule row col)
+  (cond
+    [(is-YU? row col) 'D]
+    [(is-HU? row col) 'I]
+    [else 'W]))
+
+;row col -> symbol
+;rules for generate random-layout
+(define (random-layout-rule row col)
+  (cond
+    [(is-player1? row col) 'W1D]
+    [(is-player2? row col) 'W2U]
+    [(is-U? row col) 'I]
+    [(is-fixed-W? row col) 'W]
+    [else (if (zero? (random 2)) 'D 'W)]))
+
+;row col acc rule-fn -> vector of symbol
+;generate row
+(define (generate-row row col acc rule-fn)
   (if (= col MAX-COLS)
-      (list->vector (reverse acc)) 
-      (generate-homepage-row
-       row
-       (+ col 1)
-       (cons
-        (cond
-          [(is-YU? row col) 'D]
-          [(is-HU? row col) 'I]
-          [else 'W])
-        acc))))
-
-;layout
-(define (generate-homepage row acc)
-  (if (= row MAX-ROWS)
-      (list->vector (reverse acc)) 
-      (generate-homepage
-       (+ row 1)
-       (cons (generate-homepage-row row 0 '()) 
-             acc))))
-          
-
-(define homepage (generate-homepage 0 '()))
-
-;row
-(define (generate-row row col acc)
-  (if (= col MAX-COLS)
-      (list->vector (reverse acc)) 
+      (list->vector (reverse acc))
       (generate-row
        row
        (+ col 1)
-       (cons
-        (cond
-          [(is-player1? row col) 'W1D]
-          [(is-player2? row col) 'W2U]
-          [(is-U? row col) 'I]  
-          [(is-fixed-W? row col) 'W]  
-          [else (if (zero? (random 2)) 'D 'W)]) 
-        acc))))
+       (cons (rule-fn row col) acc)
+       rule-fn)))
 
-
-;layout
-(define (generate-random-layout row acc)
+;row acc rule-fn -> vector of vector of symbol
+;generate layout
+(define (generate-layout row acc rule-fn)
   (if (= row MAX-ROWS)
-      (list->vector (reverse acc)) 
-      (generate-random-layout
+      (list->vector (reverse acc))
+      (generate-layout
        (+ row 1)
-       (cons (generate-row row 0 '()) 
-             acc))))
+       (cons (generate-row row 0 '() rule-fn) acc)
+       rule-fn)))
 
-;layout1
-(define layout1 (generate-random-layout 0 '()))
+
+;homepage and random-layout
+(define homepage (generate-layout 0 '() homepage-rule))
+(define random-layout (generate-layout 0 '() random-layout-rule))
+
 
 
 ;constant definitions
@@ -155,6 +150,7 @@
 (define player2-image-R (bitmap "P2R.png"))
 
 (define half-size (/ CELL-SIZE 2))
+(define SPACE (square 30 0 "white"))
 
 ; render-cell
 ; symbol -> Image
@@ -217,22 +213,39 @@
 (define (render-layout layout)
   (let loop ((i 0) (n (vector-length layout)) (acc empty-image))
     (if (>= i n)
-        acc
+         acc
         (loop (+ i 1) n
               (above acc
                      (render-row (vector-ref layout i)))))))
 
 
-(define SPACE (square 30 0 "white"))
+;convert-seconds-to-minutes-and-seconds-string:
+;Number -> String
+(define (seconds->minutes-and-seconds-string seconds)
+  (let* (
+        [minutes (quotient seconds 60)]
+        [remaining-seconds (remainder seconds 60)]
+        [length-remaining-seconds (string-length
+                                   (number->string remaining-seconds))]
+        )
+  (string-append
+   (number->string minutes)
+   ":"
+   (cond
+     [(= remaining-seconds 0) "00"]
+     [(< length-remaining-seconds 2) (string-append "0" (number->string remaining-seconds))]
+     [else (number->string remaining-seconds)]))))
+                   
+
 ;render-bar
 ;roundtimer maximum owner1 owner2 -> Image
 (define (render-bar roundtimer maximum owner1 owner2)
   (beside
-   (text (string-append "P1: " (number->string owner1) )30 "indigo")
+   (text (string-append "P1: " (number->string owner1)) 30 "indigo")
    SPACE
-   (text (string-append "roundtimer: " (number->string roundtimer)) 30 "indigo")
+   (text (string-append "Roundtimer: " (seconds->minutes-and-seconds-string roundtimer)) 30 "indigo")
    SPACE
-   (text (string-append "maximum bomb : " (number->string maximum)) 30 "indigo")
+   (text (string-append "Maximum bomb: " (number->string maximum)) 30 "indigo")
    SPACE
    (text (string-append "P2: " (number->string owner2)) 30 "indigo")))
    
@@ -1212,7 +1225,16 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;keyhandler;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;stop-when;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;stop-when;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;gamestate -> Boolean
+;in homepage or random-layout,press esc,return#t
+
+;in random-layout, one of the following situation,return #t
+;players all died
+;or player1 died
+;or player2 died
+;or time finish
 (define (end? gamestate)
   (if (gamestate-quit? gamestate)
       #t
@@ -1228,15 +1250,22 @@
         [player2-cor (player2-cor (gamestate-player2 gamestate))]
         [player1-symbol (get-symbol layout player1-cor)]
         [player2-symbol (get-symbol layout player2-cor)]
+        [time-finish? (= 0 (gamestate-roundtimer gamestate))]
         )
-    (cond
-      [(check-all-died? player1-symbol player2-symbol) #t]
-      [(check-player1-died? player1-symbol) #t]
-      [(check-player2-died? player2-symbol) #t]
-      [else #f]))]))))
+    (or
+      (check-all-died? player1-symbol player2-symbol)
+      (check-player1-died? player1-symbol) 
+      (check-player2-died? player2-symbol)
+      time-finish?))]))))
 
 
 
+;gamestate-> Image
+;quit? -> quit-image
+;check-all-died -> tie Image
+;check-player1-died -> player2 win Image
+;check-player2-died -> player1 win Image
+;time-finish -> tie Image
 (define (final gamestate)
   (if (gamestate-quit? gamestate)
       quit-image
@@ -1247,9 +1276,13 @@
         [player1-symbol (get-symbol layout player1-cor)]
         [player2-symbol (get-symbol layout player2-cor)]
         [quit? (gamestate-quit? gamestate)]
+        [time-finish? (= 0 (gamestate-roundtimer gamestate))]
         )
     (cond
-      [(check-all-died? player1-symbol player2-symbol) (tie layout)]
+      [(or
+        (check-all-died? player1-symbol player2-symbol)
+        time-finish?)
+        (tie layout)]
       [(check-player1-died? player1-symbol) (player2-win layout)]
       [(check-player2-died? player2-symbol) (player1-win layout)]))))
 
@@ -1322,7 +1355,7 @@
   (big-bang gamestate
     [to-draw render]
     [on-key keyhandler]
-    [on-tick timehandler 0.5]
+    [on-tick timehandler 0.1]
     [stop-when end?
                final]))
     
@@ -1332,7 +1365,7 @@
              
 (define initial-state
   (make-gamestate
-   layout1
+   random-layout
    '()
    initial-player1
    initial-player2
