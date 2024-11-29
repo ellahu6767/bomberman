@@ -3,8 +3,8 @@
 #reader(lib "htdp-advanced-reader.ss" "lang")((modname bomberman) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
 (require racket/base)
 (require 2htdp/image)
-(require racket/vector)
 (require 2htdp/universe)
+(require racket/vector)
 
 
 (define MAX-ROWS 11) 
@@ -15,10 +15,8 @@
 (define (is-U? row col)
   (and (even? row)          
        (odd? col)          
-       (> row 0)           
-       (< row (- MAX-ROWS 1))  
-       (> col 0)            
-       (< col (- MAX-COLS 1))))
+       (< 0 row (- MAX-ROWS 1))                   
+       (< 0 col (- MAX-COLS 1))))
 
 ;row col -> Boolean
 ;rules for generating 'W1D in random-layout
@@ -161,7 +159,11 @@
           [(symbol=? symbol 'I) (bitmap "U.png")]
           [(symbol=? symbol 'W) (bitmap "W.png")]
           [(symbol=? symbol 'B) (bitmap "B.png")]
-          [(symbol=? symbol 'E) (bitmap "T.png")]
+          [(symbol=? symbol 'E2) (bitmap "T.png")]
+          [(symbol=? symbol 'E1) (bitmap "T.png")]
+          [(symbol=? symbol 'E0) (bitmap "T.png")]
+               
+          
 
           ;player1
           [(symbol=? symbol 'W1L) (overlay player1-image-L (bitmap "W.png"))]
@@ -202,21 +204,27 @@
 
  ; render-row:
 (define (render-row layout)
-  (let loop ((i 0) (n (vector-length layout)) (acc empty-image))
-    (if (>= i n)
+  (let loop (
+             [i 0]
+             [acc empty-image]
+             )
+    (if (>= i MAX-COLS)
         acc
-        (loop (+ i 1) n (beside acc (render-cell (vector-ref layout i)))))))        
+        (loop (+ i 1)
+              (beside acc (render-cell (vector-ref layout i)))))))        
 
 
 ; render-layout
 ; layout -> Image
 (define (render-layout layout)
-  (let loop ((i 0) (n (vector-length layout)) (acc empty-image))
-    (if (>= i n)
+  (let loop (
+             [i 0]
+             [acc empty-image]
+             )
+    (if (>= i MAX-ROWS)
          acc
-        (loop (+ i 1) n
-              (above acc
-                     (render-row (vector-ref layout i)))))))
+        (loop (+ i 1) 
+              (above acc (render-row (vector-ref layout i)))))))
 
 
 ;convert-seconds-to-minutes-and-seconds-string:
@@ -232,7 +240,6 @@
    (number->string minutes)
    ":"
    (cond
-     [(= remaining-seconds 0) "00"]
      [(< length-remaining-seconds 2) (string-append "0" (number->string remaining-seconds))]
      [else (number->string remaining-seconds)]))))
                    
@@ -297,9 +304,8 @@
 
 
 ;gamestate is a structure
-(define-struct gamestate [layout bomb player1 player2 roundtimer maximum boom-cor quit?] #:transparent)
+(define-struct gamestate [layout bomb player1 player2 roundtimer maximum quit?] #:transparent)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;layout:;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;layout:;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;data types:
 ;layout is one of the following:
@@ -319,21 +325,8 @@
 ;'B represents the cell with unexploded bomb
 ;'E represents the cell with exploding bomb
 
-; additional notes:
-; -- each game has a random layout
-; -- safe area:
-; -- fixed position of 'I
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;layout:;;;;;;;end;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;layout:;;;;;;;end;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-
-
-
-
 
 
 
@@ -341,12 +334,11 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; bomb ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; bomb ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 ;data types:
 ;bomb is one of the following:
 ; -- '()  ;; no existing boomstate in game
 ; -- list of bombstate structure
+; -- #f in homepage
 
 ;interpretation
 ;represents all of the existing bombstate
@@ -383,7 +375,6 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;bomb;;;;;;;;;;;;;end;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;bomb;;;;;;;;;;;;;end;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
@@ -397,12 +388,12 @@
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;player1:;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;player1:;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;data types:
-;player1 is a structure
+;player1 is one of the following:
 (define-struct player1 [cor direction] #:transparent)
-;(make-player1 cor Boolean String)
+;-- (make-player1 cor Boolean String)
+;-- #f in homepage
 
 ;interpretation
 
@@ -423,7 +414,6 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;player1;;;;;;;;;;;;;end;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;player1;;;;;;;;;;;;;end;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
@@ -438,12 +428,13 @@
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;player2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;player2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;data types:
-;player2 is a structure
+;player2 is one of the following:
 (define-struct player2 [cor direction] #:transparent)
-;(make-player2 cor String)
+;-- (make-player2 cor String)
+;-- f in homepage
 
 ;interpretation is as similar as player1
 ;just replace all "player1" with "player2"
@@ -454,7 +445,7 @@
                         "U"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;player2;;;;;;;;;;;end;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;player2;;;;;;;;;;;end;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 
 
@@ -470,11 +461,14 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;roundtimer:;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;roundtimer:;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;data types:
-;roundtimer is a Interger in the interval:
-;from 120(included)
-;to 0(included)
+;roundtimer is one of the following:
+;-- roundtimer is a Interger in the interval:
+;-- from 120(included)
+;-- to 0(included)
+
+;-- #f in homepage
 
 ;interpretation
 ;represents the countdown of one game
@@ -482,8 +476,8 @@
 ;examples;
 (define initial-roundtimer 120)
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;roundtimer;;;;;;;end;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;roundtimer;;;;;;;end;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
@@ -499,12 +493,13 @@
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;maximum;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;maximum;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;data types:
+;maximum is one of the following:
 ;maximum is a Interger in the interval:
 ;from 3(included)
 ;to 6(included)
+;--#f in homepage
 
 ;interpretation
 ;represents the maximum amounts of bomb that each player can put
@@ -520,43 +515,21 @@
 
 
 
-
-
-
-;;;;;;;;;;;example of the gamestate;;;;;;;;;;;;;;;;;;;;
-;(define initial-gamestate
-;  initial-layout
-;  initial-player1
-;  initial-player2
-;  initial-roundtimer
-;  initial-maximum)
-
-
-
-
-;(define-struct gamestate [layout bomb player1 player2 roundtimer maximum])
-
-
-
 ;cor layout -> symbol
 (define (get-symbol layout cor)
   (if (in-bound? cor)
   (vector-ref
    (vector-ref layout (cor-row cor))
    (cor-column cor))
-  'Ill))
+  'ILL))
 
-
-
-;;on-tick
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;no problem;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;cor layout -> Boolean
 (define (in-bound? cor)
   (and (<= 0 (cor-row cor) (- MAX-ROWS 1))
        (<= 0 (cor-column cor) (- MAX-COLS 1))))
 
 ;cor layout -> Boolean
-(define (check-U? layout cor)
+(define (check-I? layout cor)
   (eq? (get-symbol layout cor) 'I))
 
 ;cor layout -> Boolean
@@ -586,14 +559,19 @@
 
 ;constant definitions
 (define BOOM-MAX-DISTANCE 2)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;no problem;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;boom-range;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;acc
+;meet'D add 'D cor to boom-range and stop
+;meet'I , stop
+;reach the boom-max-distance, stop
+;otherwise, continue loop
 (define (extend-direction direction-fn layout)
-  (let loop ([n 1] [acc '()])
+  (let loop (
+             [n 1]
+             [acc '()]
+             )
     (cond
       [(> n BOOM-MAX-DISTANCE) acc]
       [else
@@ -602,9 +580,11 @@
              )
          (cond
            [(not (in-bound? new-cor)) acc]
-           [(check-U? layout new-cor) acc]
+           [(check-I? layout new-cor) acc]
            [(check-D? layout new-cor) (cons new-cor acc)]
-           [else (loop (add1 n) (cons new-cor acc))]))])))
+           [else (loop
+                  (add1 n)
+                  (cons new-cor acc))]))])))
 
 
 ;boom-range:
@@ -619,18 +599,20 @@
            (lambda (n) (make-cor (- (cor-column center) n) (cor-row center)))
            (lambda (n) (make-cor (+ (cor-column center) n) (cor-row center))))]
 
-         [center-list (list center)]
-
-         [ranges
-          (map (lambda (dir-fn) (extend-direction dir-fn layout))
-               directions)])
-    (append center-list (apply append ranges))))
+         [boom-range-except-center
+          (map
+           (lambda(direction-fn)
+             (extend-direction direction-fn layout))
+               directions)]
+         )
+    (cons center
+          (apply append boom-range-except-center))))
 
 ; boom-range: list<bombstate> layout -> list<cor>
 (define (boom-range bomb-list layout)
   (apply append
-         (map (lambda (bomb)
-                (single-boom-range bomb layout))
+         (map (lambda (bombstate)
+                (single-boom-range bombstate layout))
               bomb-list)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;boom-range;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -672,16 +654,16 @@
                   (in-boom-cor? player2-cor boom-cor)
                   (convert
                   (convert
-                   (convert current-layout boom-cor 'E) player1-cor (string->symbol (string-append "E"
+                   (convert current-layout boom-cor 'E2) player1-cor (string->symbol (string-append "E"
                                                                                                    "1" player1-direction)))
                   player2-cor (string->symbol (string-append "E" "2" player2-direction))))]
                 [(in-boom-cor? player1-cor boom-cor)
                  (convert
-                 (convert current-layout boom-cor 'E) player1-cor (string->symbol (string-append "E" "1" player1-direction)))]
+                 (convert current-layout boom-cor 'E2) player1-cor (string->symbol (string-append "E" "1" player1-direction)))]
                 [(in-boom-cor? player2-cor boom-cor)
                  (convert
-                 (convert current-layout boom-cor 'E) player2-cor (string->symbol (string-append "E" "2" player2-direction)))]
-                [else (convert current-layout boom-cor 'E)])]
+                 (convert current-layout boom-cor 'E2) player2-cor (string->symbol (string-append "E" "2" player2-direction)))]
+                [else (convert current-layout boom-cor 'E2)])]
              
              [new-accumulated-boom-cor (append accumulated-boom-cor boom-cor)] 
              )
@@ -694,7 +676,6 @@
               (gamestate-player2 gamestate)
               (gamestate-roundtimer gamestate)
               (gamestate-maximum gamestate)
-              new-accumulated-boom-cor
               (gamestate-quit? gamestate))
             (loop updated-bomb-list
                   new-layout
@@ -710,18 +691,14 @@
      (lambda (bombstate)
              (if 
                (and
-
                 (not (= (bombstate-countdown bombstate) 2))
                 (in-boom-cor? (bombstate-cor bombstate) initial-boom-cor))
 
-              (begin
-                (printf "炸弹位置 ~a 受chain-explosion影响,倒计时重置为 2。\n" (bombstate-cor bombstate))
                 (make-bombstate (bombstate-cor bombstate)
                                 2
-                                (bombstate-owner bombstate)))
-              (begin
-                (printf "炸弹位置 ~a 没受chain-explosion影响 ~a。\n" (bombstate-cor bombstate) (bombstate-countdown bombstate))
-                bombstate)))
+                                (bombstate-owner bombstate))
+             
+                bombstate))
      
               bomb-list)
     )
@@ -745,20 +722,13 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;boom-end;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;gamestate -> gamestate
-;boom-end convert the 'E(boom-range) -> 'W (layout)
 ;boom-end remove the countdown=0 bomb (bomb)
-;boom-end remove the direction of owner player (player1 and player2)
+;*****这个待会扔到timehandler里
 
 
 (define (boom-end gamestate)
   (let* (
          [bomb-list (gamestate-bomb gamestate)]
-         [layout (gamestate-layout gamestate)]
-         [boom-cor (gamestate-boom-cor gamestate)]
-
-
-         ;;change the layout
-         [new-layout (convert layout boom-cor 'W)]
                            
          ;;change the bomb-list
          [new-bomb-list (remove-bomb bomb-list)]
@@ -766,25 +736,24 @@
          ;;get the new gamestate
          [new-gamestate
           (make-gamestate
-           new-layout
+           (gamestate-layout gamestate)
            new-bomb-list
            (gamestate-player1 gamestate)
            (gamestate-player2 gamestate)
            (gamestate-roundtimer gamestate)
            (gamestate-maximum gamestate)
-           '()
            (gamestate-quit? gamestate))]
          )
       new-gamestate))
       
 ;list<bombstate> -> list<bombstate>
 ;convert new bomb list with every countdown > 0
-(define (remove-bomb lob)
+(define (remove-bomb bomb-list)
   (let* (
          [removed-bombs (filter (lambda (bomb)
-                                   (<= (bombstate-countdown bomb) 0)) lob)]
+                                   (<= (bombstate-countdown bomb) 0)) bomb-list)]
          [remaining-bombs (filter (lambda (bomb)
-                                    (> (bombstate-countdown bomb) 0)) lob)]
+                                    (> (bombstate-countdown bomb) 0)) bomb-list)]
          )
     remaining-bombs))
 
@@ -797,30 +766,30 @@
 (define (updated-roundtimer roundtimer)
   (max 0 (sub1 roundtimer)))
 
-;bomb -> bomb
-(define (updated-bomb bomb)
-  (begin
-  (map (lambda (bombstate)
-         (make-bombstate
-          (bombstate-cor bombstate)
-          (max 0 (sub1 (bombstate-countdown bombstate)))
-          (bombstate-owner bombstate)))
-       bomb)))
-  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;update timer part;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;roundtimer and maximum;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;Number -> Boolean
 (define (check-roundtimer? roundtimer)
   (and
    (not (= roundtimer 120))
+   (not (= roundtimer 0))    
    (= (modulo roundtimer 30) 0)))
 
 ;Number -> Number
 (define (add-maximum maximum)
   (min 6 (add1 maximum)))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;roundtimer and maximum;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;bomb -> bomb
+(define (updated-bomb bomb)
+  (map (lambda (bombstate)
+         (make-bombstate
+          (bombstate-cor bombstate)
+          (max 0 (sub1 (bombstate-countdown bombstate)))
+          (bombstate-owner bombstate)))
+       bomb))
+ 
+  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;update timer part;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;check-zero? and two?;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -846,7 +815,28 @@
      #t
      (check-two? (rest lob)))]))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;check-zero? and two?;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    
-              
+
+
+;update-T-symbols
+;list of symbols -> list of symbols
+(define (update-T-symbols symbol)
+  (cond
+    [(equal? symbol 'E2) 'E1]
+    [(equal? symbol 'E1) 'E0]
+    [(equal? symbol 'E0) 'W]
+    [else symbol]))
+
+           
+
+;layout -> layout
+(define (updated-layout layout)
+  (vector-map
+   (lambda(row)
+           (vector-map update-T-symbols row))
+   layout))
+
+         
+
 ;gamestate -> gamestate
 (define (timehandler gamestate)
   (let (
@@ -860,7 +850,7 @@
   (let*
       (
        [updated-gamestate
-        (make-gamestate  (gamestate-layout gamestate)
+        (make-gamestate  (updated-layout (gamestate-layout gamestate))
                          (updated-bomb (gamestate-bomb gamestate))
                          (gamestate-player1 gamestate)
                          (gamestate-player2 gamestate)
@@ -868,7 +858,6 @@
                          (if (check-roundtimer? (gamestate-roundtimer gamestate))
                                                 (add-maximum (gamestate-maximum gamestate))
                                                 (gamestate-maximum gamestate))
-                         (gamestate-boom-cor gamestate)
                          (gamestate-quit? gamestate))]
      
        
@@ -912,7 +901,9 @@
   (and (in-bound? new-cor)
        (or
         (symbol=? new-symbol 'W)
-        (symbol=? new-symbol 'E)))))
+        (symbol=? new-symbol 'E2)
+        (symbol=? new-symbol 'E1)
+        (symbol=? new-symbol 'E0)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;move;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -944,7 +935,6 @@
        (gamestate-player2 gamestate)
        (gamestate-roundtimer gamestate)
        (gamestate-maximum gamestate)
-       (gamestate-boom-cor gamestate)
        #t)
   (let (
         [layout (gamestate-layout gamestate)]
@@ -972,7 +962,7 @@
        (let* (
               [new-cor (make-cor current-cor-column (+ current-cor-row 1))]
               [new-direction "D"]
-              [new-symbol (get-symbol layout new-cor)]
+              [new-symbol (string->symbol (string-ith (symbol->string (get-symbol layout new-cor)) 0))]
               [final-symbol (string->symbol
                              (string-append (symbol->string new-symbol) "1" new-direction))]
               [can-move (move-predicate? layout current-cor new-cor)]
@@ -1021,7 +1011,6 @@
           (gamestate-player2 gamestate)
           (gamestate-roundtimer gamestate)
           (gamestate-maximum gamestate)
-          (gamestate-boom-cor gamestate)
           (gamestate-quit? gamestate)))]
          
 
@@ -1030,7 +1019,7 @@
        (let* (
               [new-cor (make-cor current-cor-column (- current-cor-row 1))]
               [new-direction "U"]
-              [new-symbol (get-symbol layout new-cor)]
+              [new-symbol (string->symbol (string-ith (symbol->string (get-symbol layout new-cor)) 0))]
               [final-symbol (string->symbol
                              (string-append (symbol->string new-symbol) "1" new-direction))]
               [can-move (move-predicate? layout current-cor new-cor)]
@@ -1073,7 +1062,6 @@
           (gamestate-player2 gamestate)
           (gamestate-roundtimer gamestate)
           (gamestate-maximum gamestate)
-          (gamestate-boom-cor gamestate)
           (gamestate-quit? gamestate)))]
 
       ;;left
@@ -1081,7 +1069,7 @@
        (let* (
               [new-cor (make-cor (- current-cor-column 1) current-cor-row)]
               [new-direction "L"]
-              [new-symbol (get-symbol layout new-cor)]
+              [new-symbol (string->symbol (string-ith (symbol->string (get-symbol layout new-cor)) 0))]
               [final-symbol (string->symbol
                          (string-append (symbol->string new-symbol) "1" new-direction))]
               [can-move (move-predicate? layout current-cor new-cor)]
@@ -1125,7 +1113,6 @@
           (gamestate-player2 gamestate)
           (gamestate-roundtimer gamestate)
           (gamestate-maximum gamestate)
-          (gamestate-boom-cor gamestate)
           (gamestate-quit? gamestate)))]
 
   ;;right
@@ -1133,7 +1120,7 @@
        (let* (
               [new-cor (make-cor (+ current-cor-column 1) current-cor-row)]
               [new-direction "R"]
-              [new-symbol (get-symbol layout new-cor)]
+              [new-symbol (string->symbol (string-ith (symbol->string (get-symbol layout new-cor)) 0))]
               [final-symbol (string->symbol
                          (string-append (symbol->string new-symbol) "1" new-direction))]
               [can-move (move-predicate? layout current-cor new-cor)]
@@ -1177,7 +1164,6 @@
           (gamestate-player2 gamestate)
           (gamestate-roundtimer gamestate)
           (gamestate-maximum gamestate)
-          (gamestate-boom-cor gamestate)
           (gamestate-quit? gamestate)))]
 
       
@@ -1209,7 +1195,6 @@
           (gamestate-player2 gamestate)
           (gamestate-roundtimer gamestate)
           (gamestate-maximum gamestate)
-          (gamestate-boom-cor gamestate)
           (gamestate-quit? gamestate)))]
           
               
@@ -1355,7 +1340,7 @@
   (big-bang gamestate
     [to-draw render]
     [on-key keyhandler]
-    [on-tick timehandler 0.1]
+    [on-tick timehandler 0.5]
     [stop-when end?
                final]))
     
@@ -1369,9 +1354,8 @@
    '()
    initial-player1
    initial-player2
-   120
-   3
-  '()
+   initial-roundtimer
+   initial-maximum
   #f))
 
 (define homepage-state
@@ -1382,7 +1366,6 @@
    #f
    #f
    #f
-   '()
   #f))
 
 
