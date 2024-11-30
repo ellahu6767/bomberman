@@ -5,6 +5,7 @@
 (require 2htdp/image)
 (require 2htdp/universe)
 (require racket/vector)
+(require racket/system)
 
 
 (define MAX-ROWS 11) 
@@ -353,14 +354,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;; countdown ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;data types:
 ;countdown is a Integer in the interval
-;from 5(included)
+;from 3
 ;to 0(included)
 
 ;interpretation:
 ;represents the countdown of the each bombstate
-;5 is the time for bomb just added to game 
-;2 is the time for bomb start to explode
-;0 is the time for bomb end explode
+;3 is the time for bomb just added to game 
+;0 is the time for bomb start to explode
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; cor ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;data types:
@@ -615,13 +615,10 @@
                 (single-boom-range bombstate layout))
               bomb-list)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;boom-range;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;boom;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;gamestate -> gamestate 
-;question
 (define (boom gamestate)
   (let* (
          [bomb-list (gamestate-bomb gamestate)]
@@ -641,33 +638,42 @@
              [exploding-list
               (filter
                (lambda (bombstate)
-                 (and (= (bombstate-countdown bombstate) 2)
+                 (and (= (bombstate-countdown bombstate) 0)
                       (not (in-boom-cor? (bombstate-cor bombstate) processed-bombs))))
                current-bomb-list)]
              [boom-cor (boom-range exploding-list current-layout)]
              [updated-bomb-list (chain-explosion boom-cor current-bomb-list current-layout)]
              [new-processed-bombs (append processed-bombs (map bombstate-cor exploding-list))]
+
              [new-layout
               (cond
                 [(and
                   (in-boom-cor? player1-cor boom-cor)
                   (in-boom-cor? player2-cor boom-cor)
-                  (convert
-                  (convert
-                   (convert current-layout boom-cor 'E2) player1-cor (string->symbol (string-append "E"
-                                                                                                   "1" player1-direction)))
+                  
+                  (convert ;;kill player2
+                   (convert ;;kill player1
+                    (convert current-layout boom-cor 'E2) ;;change boom-range to 'E2
+                   player1-cor (string->symbol (string-append "E" "1" player1-direction)))
+                  
                   player2-cor (string->symbol (string-append "E" "2" player2-direction))))]
+
                 [(in-boom-cor? player1-cor boom-cor)
-                 (convert
-                 (convert current-layout boom-cor 'E2) player1-cor (string->symbol (string-append "E" "1" player1-direction)))]
+                 
+                 (convert ;;kill player1
+                  (convert current-layout boom-cor 'E2) ;;change boom-range to 'E2
+                  player1-cor (string->symbol (string-append "E" "1" player1-direction)))]
+                
                 [(in-boom-cor? player2-cor boom-cor)
-                 (convert
-                 (convert current-layout boom-cor 'E2) player2-cor (string->symbol (string-append "E" "2" player2-direction)))]
-                [else (convert current-layout boom-cor 'E2)])]
+                 
+                 (convert ;;kill player2
+                  (convert current-layout boom-cor 'E2) ;;change boom-range to 'E2
+                 player2-cor (string->symbol (string-append "E" "2" player2-direction)))]
+
+                [else (convert current-layout boom-cor 'E2)])] ;;change boom-range to 'E2
              
-             [new-accumulated-boom-cor (append accumulated-boom-cor boom-cor)] 
+             [new-accumulated-boom-cor (append accumulated-boom-cor boom-cor)]           
              )
-        (printf "boom-cor from boom: ~a\n" new-accumulated-boom-cor)
         (if (empty? exploding-list)       
              (make-gamestate
               new-layout
@@ -684,6 +690,7 @@
 
 
 
+
 ;chain-explosion:
 ;list-of-cor bomb-list layout -> bomb-list
 (define (chain-explosion initial-boom-cor bomb-list layout)
@@ -691,11 +698,11 @@
      (lambda (bombstate)
              (if 
                (and
-                (not (= (bombstate-countdown bombstate) 2))
+                (not (= (bombstate-countdown bombstate) 0))
                 (in-boom-cor? (bombstate-cor bombstate) initial-boom-cor))
 
                 (make-bombstate (bombstate-cor bombstate)
-                                2
+                                0
                                 (bombstate-owner bombstate))
              
                 bombstate))
@@ -720,31 +727,6 @@
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;boom;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;boom-end;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;gamestate -> gamestate
-;boom-end remove the countdown=0 bomb (bomb)
-;*****这个待会扔到timehandler里
-
-
-(define (boom-end gamestate)
-  (let* (
-         [bomb-list (gamestate-bomb gamestate)]
-                           
-         ;;change the bomb-list
-         [new-bomb-list (remove-bomb bomb-list)]
-
-         ;;get the new gamestate
-         [new-gamestate
-          (make-gamestate
-           (gamestate-layout gamestate)
-           new-bomb-list
-           (gamestate-player1 gamestate)
-           (gamestate-player2 gamestate)
-           (gamestate-roundtimer gamestate)
-           (gamestate-maximum gamestate)
-           (gamestate-quit? gamestate))]
-         )
-      new-gamestate))
       
 ;list<bombstate> -> list<bombstate>
 ;convert new bomb list with every countdown > 0
@@ -758,10 +740,6 @@
     remaining-bombs))
 
 
-            
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;boom-end;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                             
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;update timer part;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;Number -> Number
 (define (updated-roundtimer roundtimer)
   (max 0 (sub1 roundtimer)))
@@ -786,14 +764,7 @@
           (bombstate-owner bombstate)))
        bomb))
  
-  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;update timer part;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;check-zero? and two?;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;gamestate -> Boolean
 ;list<bomb> -> Boolean
 (define (check-zero? lob)
   (cond
@@ -805,20 +776,8 @@
      (check-zero? (rest lob)))]))
 
 
-;list<bomb> -> Boolean
-(define (check-two? lob)
-  (cond
-    [(empty? lob) #f]
-    [else
-     (if
-     (= (bombstate-countdown (first lob)) 2)
-     #t
-     (check-two? (rest lob)))]))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;check-zero? and two?;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    
-
-
 ;update-T-symbols
-;list of symbols -> list of symbols
+;symbol -> symbol
 (define (update-T-symbols symbol)
   (cond
     [(equal? symbol 'E2) 'E1]
@@ -827,7 +786,6 @@
     [else symbol]))
 
            
-
 ;layout -> layout
 (define (updated-layout layout)
   (vector-map
@@ -836,7 +794,6 @@
    layout))
 
          
-
 ;gamestate -> gamestate
 (define (timehandler gamestate)
   (let (
@@ -862,66 +819,57 @@
      
        
        ;;update game state (update timer for roundtimer and bomb-countwdown)
-       ;;and decide if add-maximum
-       [boom-end-state
-        (if (check-zero? (gamestate-bomb updated-gamestate))
-            (boom-end updated-gamestate)
-            updated-gamestate)]
+
        ;;handle countdown-zero bomb
-       [bomb-boom-state
-        (if (check-two? (gamestate-bomb boom-end-state))
-            (boom boom-end-state)
-            boom-end-state)]
-       
-       
-       ;;handle countdown-two bomb
+       [boom-gamestate
+        (if (check-zero? (gamestate-bomb updated-gamestate))
+            (boom updated-gamestate)
+            updated-gamestate)]
+
+       ;;remove countdown=0 bomb
+       [updated-bomb-list (gamestate-bomb boom-gamestate)]
+       [final-bomb-list
+        (remove-bomb updated-bomb-list)]
+       [new-gamestate
+        (make-gamestate
+         (gamestate-layout boom-gamestate)
+         final-bomb-list
+         (gamestate-player1 boom-gamestate)
+         (gamestate-player2 boom-gamestate)
+         (gamestate-roundtimer boom-gamestate)
+         (gamestate-maximum boom-gamestate)
+         (gamestate-quit? boom-gamestate))]
        )
-    bomb-boom-state)])))
+    new-gamestate)])))
+       
+   
+    
+
+       
+  
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;keyhandler
 ;gamestate ke -> gamestate
-;up down left right only change the position of player
-
-;auxiliary functions
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;move;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;gamestate -> gamestate
 
 ;; move-predicate?: gamestate cor -> Boolean
 
-(define (move-predicate? layout current-cor new-cor)
+(define (move-predicate? layout new-cor)
   (let (
-        [current-symbol (get-symbol layout current-cor)]
         [new-symbol (get-symbol layout new-cor)]
         )
   (and (in-bound? new-cor)
        (or
         (symbol=? new-symbol 'W)
-        (symbol=? new-symbol 'E2)
-        (symbol=? new-symbol 'E1)
-        (symbol=? new-symbol 'E0)))))
+        (= (string-length (symbol->string new-symbol)) 2)))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;move;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;put-bomb;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;cor
 (define (put-predicate? layout current-cor owner1 maximum)
   (let (
         [current-symbol (get-symbol layout current-cor)]
         )
     (and (< owner1 maximum)
-         (or
-          (symbol=? current-symbol 'W1L)
-          (symbol=? current-symbol 'W1U)
-          (symbol=? current-symbol 'W1D)
-          (symbol=? current-symbol 'W1R)))))
-
-      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;put-bomb;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+         (= (string-length (symbol->string current-symbol)) 3))))
 
 
 ;;keyhandler:
@@ -965,25 +913,14 @@
               [new-symbol (string->symbol (string-ith (symbol->string (get-symbol layout new-cor)) 0))]
               [final-symbol (string->symbol
                              (string-append (symbol->string new-symbol) "1" new-direction))]
-              [can-move (move-predicate? layout current-cor new-cor)]
+              [can-move (move-predicate? layout new-cor)]
               [updated-layout
                (if can-move
                    (let* (
                           [restored-symbol
-                           (cond
-                             [(symbol=? current-symbol 'W) 'W]
-                             [(or (symbol=? current-symbol 'W1L)
-                                  (symbol=? current-symbol 'W1U)
-                                  (symbol=? current-symbol 'W1D)
-                                  (symbol=? current-symbol 'W1R))
-                              'W]
-                             [(or (symbol=? current-symbol 'B1L)
-                                  (symbol=? current-symbol 'B1U)
-                                  (symbol=? current-symbol 'B1D)
-                                  (symbol=? current-symbol 'B1R))      
-                              'B]
-                             [else current-symbol]
-                             )]
+                           (if (= (string-length (symbol->string current-symbol)) 3)
+                               (string->symbol (string-ith (symbol->string current-symbol) 0))
+                               current-symbol)]
                           )
                           
                              
@@ -1022,24 +959,13 @@
               [new-symbol (string->symbol (string-ith (symbol->string (get-symbol layout new-cor)) 0))]
               [final-symbol (string->symbol
                              (string-append (symbol->string new-symbol) "1" new-direction))]
-              [can-move (move-predicate? layout current-cor new-cor)]
+              [can-move (move-predicate? layout new-cor)]
               [updated-layout
                (if can-move
                    (let* ([restored-symbol
-                           (cond
-                             [(symbol=? current-symbol 'W) 'W]
-                             [(or (symbol=? current-symbol 'W1L)
-                                  (symbol=? current-symbol 'W1U)
-                                  (symbol=? current-symbol 'W1D)
-                                  (symbol=? current-symbol 'W1R))
-                              'W]
-                             [(or (symbol=? current-symbol 'B1L)
-                                  (symbol=? current-symbol 'B1U)
-                                  (symbol=? current-symbol 'B1D)
-                                  (symbol=? current-symbol 'B1R))      
-                              'B]
-                             [else current-symbol]
-                             )]
+                           (if (= (string-length (symbol->string current-symbol)) 3)
+                               (string->symbol (string-ith (symbol->string current-symbol) 0))
+                               current-symbol)]
                           )
                      (convert
                       (convert layout new-cor final-symbol)
@@ -1072,24 +998,13 @@
               [new-symbol (string->symbol (string-ith (symbol->string (get-symbol layout new-cor)) 0))]
               [final-symbol (string->symbol
                          (string-append (symbol->string new-symbol) "1" new-direction))]
-              [can-move (move-predicate? layout current-cor new-cor)]
+              [can-move (move-predicate? layout new-cor)]
               [updated-layout
                (if can-move
                    (let* ([restored-symbol
-                           (cond
-                             [(symbol=? current-symbol 'W) 'W]
-                             [(or (symbol=? current-symbol 'W1L)
-                                  (symbol=? current-symbol 'W1U)
-                                  (symbol=? current-symbol 'W1D)
-                                  (symbol=? current-symbol 'W1R))
-                              'W]
-                             [(or (symbol=? current-symbol 'B1L)
-                                  (symbol=? current-symbol 'B1U)
-                                  (symbol=? current-symbol 'B1D)
-                                  (symbol=? current-symbol 'B1R))      
-                              'B]
-                             [else current-symbol]
-                             )]
+                           (if (= (string-length (symbol->string current-symbol)) 3)
+                               (string->symbol (string-ith (symbol->string current-symbol) 0))
+                               current-symbol)]
                           )
                      
                      (convert
@@ -1123,24 +1038,14 @@
               [new-symbol (string->symbol (string-ith (symbol->string (get-symbol layout new-cor)) 0))]
               [final-symbol (string->symbol
                          (string-append (symbol->string new-symbol) "1" new-direction))]
-              [can-move (move-predicate? layout current-cor new-cor)]
+              [can-move (move-predicate? layout new-cor)]
               [updated-layout
                (if can-move
                    (let* ([restored-symbol
-                           (cond
-                             [(symbol=? current-symbol 'W) 'W]
-                             [(or (symbol=? current-symbol 'W1L)
-                                  (symbol=? current-symbol 'W1U)
-                                  (symbol=? current-symbol 'W1D)
-                                  (symbol=? current-symbol 'W1R))
-                              'W]
-                             [(or (symbol=? current-symbol 'B1L)
-                                  (symbol=? current-symbol 'B1U)
-                                  (symbol=? current-symbol 'B1D)
-                                  (symbol=? current-symbol 'B1R))      
-                              'B]
-                             [else current-symbol]
-                             )]
+                           (if (= (string-length (symbol->string current-symbol)) 3)
+                               (string->symbol (string-ith (symbol->string current-symbol) 0))
+                               current-symbol)]
+
                           )
                      
                      (convert
@@ -1185,7 +1090,7 @@
                    layout)]
               [updated-bomb-list
                (if can-put?
-                    (cons (make-bombstate current-cor 5 'P1) (gamestate-bomb gamestate))
+                    (cons (make-bombstate current-cor 3 'P1) (gamestate-bomb gamestate))
                     (gamestate-bomb gamestate))]
               )
          (make-gamestate
@@ -1267,9 +1172,9 @@
       [(or
         (check-all-died? player1-symbol player2-symbol)
         time-finish?)
-        (tie layout)]
-      [(check-player1-died? player1-symbol) (player2-win layout)]
-      [(check-player2-died? player2-symbol) (player1-win layout)]))))
+        (tie gamestate)]
+      [(check-player1-died? player1-symbol) (player2-win gamestate)]
+      [(check-player2-died? player2-symbol) (player1-win gamestate)]))))
 
     
 ;quit-image
@@ -1285,26 +1190,26 @@
 
 
 ;player2-win
-(define (player2-win layout)
+(define (player2-win gamestate)
   (overlay
    (text "PLAYER2-WIN!"
          100
          "RED")
-   (render-layout layout)))
+   (render gamestate)))
 
-(define (player1-win layout)
+(define (player1-win gamestate)
   (overlay
    (text "PLAYER1-WIN!"
          100
          "RED")
-   (render-layout layout)))
+   (render gamestate)))
 
-(define (tie layout)
+(define (tie gamestate)
   (overlay
    (text "You Can Get Married!"
          70
          "RED")
-   (render-layout layout)))
+   (render gamestate)))
 
 ;; layout -> Boolean
 (define (check-player1-died? symbol)
@@ -1371,7 +1276,11 @@
 
 
 ;application
+(system "open ~/Desktop/backup/background.mp3")
 (main homepage-state)
+
+
+
 
 
 
