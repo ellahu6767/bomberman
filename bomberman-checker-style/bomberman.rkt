@@ -324,7 +324,14 @@
 ;'I represents the undestructible cell
 ;'D represents the destructible cell
 ;'B represents the cell with unexploded bomb
-;'E represents the cell with exploding bomb
+
+;for each three-length symbol
+;it represents one of the player on the kinds of cell with one direction
+;for example, 'W1L represents player1 on the 'W cell with left direction
+
+;for each two-length symbol
+;'E2 'E1 'E0 represents the exploding bomb and its countdown
+;for example, 'E2 means one exploding bomb and the exploding will last 2 seconds.
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;layout:;;;;;;;end;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
