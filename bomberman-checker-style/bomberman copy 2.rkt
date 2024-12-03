@@ -905,7 +905,7 @@
       [else
   (let* (
          [layout (gamestate-layout gamestate)]
-         [current-cor (player1-cor (gamestate-player1 gamestate))]
+         [current-cor (player1-cor (gamestate-player1 gamestate))] ;the cor where player 1 is
          [current-symbol (get-symbol layout current-cor)]
          [current-direction (player1-direction (gamestate-player1 gamestate))]
          [current-cor-column (cor-column current-cor)]
@@ -920,16 +920,21 @@
        (let* (
               [new-cor (make-cor current-cor-column (+ current-cor-row 1))]
               [new-direction "D"]
+              ;the direction is still old
               [new-symbol (string->symbol (string-ith (symbol->string (get-symbol layout new-cor)) 0))]
+              ;the first letter of the symbol of the new-cor
               [final-symbol (string->symbol
                              (string-append (symbol->string new-symbol) "1" new-direction))]
+              ;new-symbol 1 newdirection
               [can-move (move-predicate? layout new-cor)]
+              ;is the next direction movable?
               [updated-layout
                (if can-move
                    (let* (
-                          [restored-symbol
+                          [restored-symbol ;old cor without the player
                            (if (= (string-length (symbol->string current-symbol)) 3)
                                (string->symbol (string-ith (symbol->string current-symbol) 0))
+                               ;take the first symbol of the currect-cor, where the player 1 is
                                current-symbol)]
                           )
                           
@@ -937,14 +942,14 @@
 
                      (convert
                       (convert layout new-cor final-symbol)
-                      current-cor restored-symbol))
+                      current-cor restored-symbol)) ;restored-symbol on the layout
 
-                   (convert layout current-cor
+                   (convert layout current-cor ;else
                             (string->symbol
                              (string-append
-                              (substring (symbol->string current-symbol) 0 1)
-                              "1"                                      
-                              new-direction))))]                       
+                              (substring (symbol->string current-symbol) 0 1) ;currect-cor, unchanged
+                              "1"  ;player1, unchanged                                    
+                              new-direction))))] ;new-direction, changed                       
 
               )               
          (make-gamestate
@@ -1088,19 +1093,20 @@
               [final-symbol (string->symbol
                              (string-append "B" "1" current-direction))]
               [bomb-list (gamestate-bomb gamestate)]
-              [owner1 (count-num (filter
+              [owner1 (count-num (filter ;how many bombs belong to player1
                                   (lambda(bombstate)
-                                    (symbol=? (bombstate-owner bombstate) 'P1))
+                                    (symbol=? (bombstate-owner bombstate) 'P1))  ;the bombs those belong to player1
                                   bomb-list))]
-              [can-put? (put-predicate? layout current-cor owner1 maximum)]
+              [can-put? (put-predicate? layout current-cor owner1 maximum)] ;is the cor putable?
               [updated-layout
                (if can-put?
                    
                    (convert layout current-cor final-symbol)
-                   layout)]
+                   layout)]  ;if yes put the bomb there
               [updated-bomb-list
                (if can-put?
                     (cons (make-bombstate current-cor 3 'P1) (gamestate-bomb gamestate))
+                     ;add the bomb into List<Bomb>, set the count-down to 3
                     (gamestate-bomb gamestate))]
               )
          (make-gamestate
@@ -1153,10 +1159,10 @@
         [time-finish? (= 0 (gamestate-roundtimer gamestate))]
         )
     (or
-      (check-all-died? player1-symbol player2-symbol)
-      (check-player1-died? player1-symbol) 
-      (check-player2-died? player2-symbol)
-      time-finish?))]))))
+      (check-all-died? player1-symbol player2-symbol) ;#t if both are dead
+      (check-player1-died? player1-symbol) ;#t if p1 is dead
+      (check-player2-died? player2-symbol) ;#t if p2 is dead
+      time-finish?))])))) ;#t if time is finished
 
 
 
@@ -1182,9 +1188,9 @@
       [(or
         (check-all-died? player1-symbol player2-symbol)
         time-finish?)
-        (tie gamestate)]
-      [(check-player1-died? player1-symbol) (player2-win gamestate)]
-      [(check-player2-died? player2-symbol) (player1-win gamestate)]))))
+        (tie gamestate)] ;tie image
+      [(check-player1-died? player1-symbol) (player2-win gamestate)] ;player2-win image
+      [(check-player2-died? player2-symbol) (player1-win gamestate)])))) ;player1-win image
 
     
 ;quit-image
@@ -1280,13 +1286,13 @@
    #f
    #f
    #f
-   #f
+   #f 
   #f))
 
 
 
 ;application
-(system "open ~/Desktop/backup/background.mp3")
+(system "open ~/Desktop/bomberman/bomberman-checker-style/background.mp3")
 (main homepage-state)
 
 

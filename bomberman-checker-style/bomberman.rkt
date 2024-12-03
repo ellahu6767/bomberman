@@ -1182,9 +1182,9 @@
       [(or
         (check-all-died? player1-symbol player2-symbol)
         time-finish?)
-        (tie gamestate)]
-      [(check-player1-died? player1-symbol) (player2-win gamestate)]
-      [(check-player2-died? player2-symbol) (player1-win gamestate)]))))
+        (tie gamestate)] ;tie image
+      [(check-player1-died? player1-symbol) (player2-win gamestate)] ;player2-win image
+      [(check-player2-died? player2-symbol) (player1-win gamestate)])))) ;player1-win image
 
     
 ;quit-image
