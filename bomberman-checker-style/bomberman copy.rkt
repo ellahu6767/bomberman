@@ -110,7 +110,7 @@
 ;generate row
 (define (generate-row row col acc rule-fn)
   (if (= col MAX-COLS) ;if one row comes to the end
-      (list->vector (reverse acc)) ;transform list to vector
+      (list->vector (reverse acc)) ;transform the acc list to vector
       (generate-row ;else
        row ;the row don't change
        (+ col 1) ;move to the next cell on the same row
@@ -144,7 +144,7 @@
 (define player2-image-L (bitmap "P2L.png"))
 (define player2-image-R (bitmap "P2R.png"))
 
-(define half-size (/ CELL-SIZE 2))
+
 (define SPACE (square 30 0 "white"))
 
 ; render-cell
@@ -159,8 +159,6 @@
           [(symbol=? symbol 'E2) (bitmap "T.png")]
           [(symbol=? symbol 'E1) (bitmap "T.png")]
           [(symbol=? symbol 'E0) (bitmap "T.png")]
-               
-          
 
           ;player1
           [(symbol=? symbol 'W1L) (overlay player1-image-L (bitmap "W.png"))]
@@ -171,7 +169,6 @@
           [(symbol=? symbol 'B1R) (overlay player1-image-R (bitmap "B.png"))]
           [(symbol=? symbol 'B1U) (overlay player1-image-U (bitmap "B.png"))]
           [(symbol=? symbol 'B1D) (overlay player1-image-D (bitmap "B.png"))]
-  
 
           ;player2
           [(symbol=? symbol 'W2L) (overlay player2-image-L (bitmap "W.png"))]
@@ -184,26 +181,22 @@
           [(symbol=? symbol 'B2D) (overlay player2-image-D (bitmap "B.png"))]
 
           ;player1-dead-image
-
           [(symbol=? symbol 'E1D) (overlay player1-image-D (bitmap "Boom.png"))]
           [(symbol=? symbol 'E1U) (overlay player1-image-U (bitmap "Boom.png"))]
           [(symbol=? symbol 'E1L) (overlay player1-image-L (bitmap "Boom.png"))]
           [(symbol=? symbol 'E1R) (overlay player1-image-R (bitmap "Boom.png"))]
 
           ;player2-dead-image
-
           [(symbol=? symbol 'E2D) (overlay player2-image-D (bitmap "Boom.png"))]
           [(symbol=? symbol 'E2U) (overlay player2-image-U (bitmap "Boom.png"))]
           [(symbol=? symbol 'E2L) (overlay player2-image-L (bitmap "Boom.png"))]
           [(symbol=? symbol 'E2R) (overlay player2-image-R (bitmap "Boom.png"))])))
 
-
-
  ; render-row:
 (define (render-row layout)
-  (let loop (
-             [i 0]
-             [acc empty-image]
+  (let loop ( ;function name loop
+             [i 0] ;start: i=0
+             [acc empty-image] ;start: acc=empty-image
              )
     (if (>= i MAX-COLS)
         acc

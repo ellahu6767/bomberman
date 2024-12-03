@@ -132,7 +132,7 @@
 (define random-layout (generate-layout 0 '() random-layout-rule))
 
 ;constant definitions
-(define CELL-SIZE (image-width (bitmap "W.png")))
+(define CELL-SIZE (image-width (bitmap "W.png"))) ;the width of the walkabel cell image
 
 (define player1-image-D (bitmap "P1D.png"))
 (define player1-image-U (bitmap "P1U.png"))
@@ -144,7 +144,6 @@
 (define player2-image-L (bitmap "P2L.png"))
 (define player2-image-R (bitmap "P2R.png"))
 
-(define half-size (/ CELL-SIZE 2))
 (define SPACE (square 30 0 "white"))
 
 ; render-cell
