@@ -155,7 +155,7 @@
 
 ;chain-explosion:
 ;list-of-cor bomb-list layout -> bomb-list
-(define (chain-explosion initial-boom-cor bomb-list)
+(define (chain-explosion initial-boom-cor bomb-list layout)
     (map
      (lambda (bombstate)
              (if 
