@@ -10,9 +10,9 @@
   'ILL)) ;else 'ILL
 
 ;cor layout -> Boolean
-(define (in-bound? cor)
-  (and (<= 0 (cor-row cor) (- MAX-ROWS 1)) ;if it is a valid vector ref for row, 0~10
-       (<= 0 (cor-column cor) (- MAX-COLS 1)))) ;if it is a valid vector ref for column, 0~14
+(define (in-bound? cor layout)
+  (and (<= 0 (cor-row cor) (- (vector-length layout) 1))     
+       (<= 0 (cor-column cor) (- (vector-length (vector-ref layout 0)) 1))))
 
 
 ;convert:
