@@ -1,6 +1,11 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
 #reader(lib "htdp-advanced-reader.ss" "lang")((modname render) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
+(require racket/base)
+(require "bomberman.rkt")
+(require rackunit)
+(require rackunit/text-ui)
+
 (define MAX-ROWS 11) 
 (define MAX-COLS 15)
 
@@ -303,6 +308,7 @@
        (cons (rule-fn row col) acc) ;new accumulator
        rule-fn)))
 ;;Test---missing---
+
 ;row acc rule-fn -> vector of vector of symbol
 ;generate layout
 (define (generate-layout row acc rule-fn)
