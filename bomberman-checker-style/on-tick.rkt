@@ -193,13 +193,9 @@
 ;list<bombstate> -> list<bombstate>
 ;convert new bomb list with every countdown > 0
 (define (remove-bomb bomb-list)
-  (let* (
-         [removed-bombs (filter (lambda (bomb)
-                                   (<= (bombstate-countdown bomb) 0)) bomb-list)] ;bombs those count-down <= 0
-         [remaining-bombs (filter (lambda (bomb)
-                                    (> (bombstate-countdown bomb) 0)) bomb-list)] ;bombs those count-down >0
-         )
-    remaining-bombs))
+  (filter (lambda (bomb)
+            (> (bombstate-countdown bomb) 0)) bomb-list))
+
 
 ;Number -> Number
 (define (updated-roundtimer roundtimer)

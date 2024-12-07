@@ -822,9 +822,9 @@
                          (gamestate-player1 gamestate)
                          (gamestate-player2 gamestate)
                          (updated-roundtimer (gamestate-roundtimer gamestate))
-                         (if (check-roundtimer? (gamestate-roundtimer gamestate))
+                         (if (check-roundtimer? (gamestate-roundtimer gamestate)) ;30s passed, add 1 bomb
                                                 (add-maximum (gamestate-maximum gamestate))
-                                                (gamestate-maximum gamestate))
+                                                (gamestate-maximum gamestate)) 
                          (gamestate-quit? gamestate))]
      
        
@@ -832,14 +832,14 @@
 
        ;;handle countdown-zero bomb
        [boom-gamestate
-        (if (check-zero? (gamestate-bomb updated-gamestate))
-            (boom updated-gamestate)
+        (if (check-zero? (gamestate-bomb updated-gamestate)) ;if bomb count-down is zero
+            (boom updated-gamestate) ;output the layout with boom in it, update the gamestate with the n
             updated-gamestate)]
 
        ;;remove countdown=0 bomb
        [updated-bomb-list (gamestate-bomb boom-gamestate)]
        [final-bomb-list
-        (remove-bomb updated-bomb-list)]
+        (remove-bomb updated-bomb-list)] ;remove the exploding bomb
        [new-gamestate
         (make-gamestate
          (gamestate-layout boom-gamestate)
