@@ -10,18 +10,18 @@
 
         [potential-boom-range-except-center
          (list
-        ;;up
-         (list (make-cor cor-x (- cor-y 1))
-               (make-cor cor-x (- cor-y 2)))
-        ;;down
-         (list (make-cor cor-x (+ cor-y 1))
-               (make-cor cor-x (+ cor-y 2)))
-        ;;left
+         ;;right
+         (list (make-cor (+ cor-x 1) cor-y)
+               (make-cor (+ cor-x 2) cor-y))
+         ;;left
          (list (make-cor (- cor-x 1) cor-y)
                (make-cor (- cor-x 2) cor-y))
-        ;;right
-         (list (make-cor (+ cor-x 1) cor-y)
-               (make-cor (+ cor-x 2) cor-y)))]
+         ;;down
+         (list (make-cor cor-x (+ cor-y 1))
+               (make-cor cor-x (+ cor-y 2)))
+         ;;up
+         (list (make-cor cor-x (- cor-y 1))
+               (make-cor cor-x (- cor-y 2))))]
 
         [boom-range-except-center
          (map
