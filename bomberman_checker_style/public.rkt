@@ -7,22 +7,23 @@
 (require racket/system)
 (require racket/base)
 
-
 (provide (all-defined-out))
 
 ;constants
-(define MAX-ROWS 10)
+(define MAX-ROWS 11)
 (define MAX-COLS 15)
 
 ;gamestate is a structure
 (define-struct gamestate [layout bomb player1 player2 roundtimer maximum quit?] #:transparent)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;layout:;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;data types:
-;layout is one of the following:
-; -- (Vector of (Vector of Symbol)) 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;layout;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                                        ;    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;layout;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;data types:
+;layout is a
+;(Vector of (Vector of Symbol)) 
 
-;;;;;;;;;;;;;;;;;interpretation for (Vector of (Vector of Symbol));;;;;;;;;;;;;;;;;;;;;;;
+;interpretation
 
 ;the layout of the game is a 2D vector grid composed of same-size-square-shape cells.
 ;each cell contains a symbol.
@@ -31,47 +32,58 @@
 
 ;for each symbol:
 ;'W represents the walkable cell
-;'I represents the undestructible cell
+;'I represents the indestructible cell
 ;'D represents the destructible cell
 ;'B represents the cell with unexploded bomb
 
 ;for each three-length symbol
-;it represents one of the player on the kinds of cell with one direction
+;it represents a player on a specific type of cell, along with the player's name and direction.
 ;for example, 'W1L represents player1 on the 'W cell with left direction
+;'W2U represents player2 on the 'W cell with up direction
 
 ;for each two-length symbol
 ;'E2 'E1 'E0 represents the exploding bomb and its countdown
-;for example, 'E2 means one exploding bomb and the exploding will last 2 seconds.
+;for example, 'E2 means one exploding bomb and the exploding will last 3 seconds
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;layout:;;;;;;;end;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;data examples
+(define layout-example
+  (vector
+   (vector 'W1D 'W 'W 'W 'I)
+   (vector 'W 'W 'E1 'W 'D)
+   (vector 'W 'W 'E2 'W 'D)
+   (vector 'W 'B 'W 'W 'D)
+   (vector 'W 'W 'W 'W 'W2U)))
 
 
 
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; bomb ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;bomb;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                                     ;   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;bomb;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;data types:
 ;bomb is one of the following:
 ; -- '()  ;; no existing boomstate in game
 ; -- list of bombstate structure
-; -- #f in homepage
+; -- #f when layout is homepage
 
 ;interpretation
 ;represents all of the existing bombstate
-;including both exploding and unexploed bomb
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; bombstate ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; bombstate ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;data types:
 ;bombstate is a structure
 (define-struct bombstate [cor countdown owner] #:transparent)
 ;interpretation:
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;; countdown ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;; countdown ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;data types:
 ;countdown is an Integer in the interval
-;from 3
+;from 3(included)
 ;to 0(included)
 
 ;interpretation:
@@ -85,106 +97,108 @@
 (define-struct cor [column row] #:transparent)
 ;(make-cor Integer Integer)
 
-
 ;interpretation:
 ;represents the cell location in the game
 ;column is a Integer , represents the location of column
 ;row is a Integer, represents the location of row
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;bomb;;;;;;;;;;;;;end;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
+;data examples
+(define exmaple-cor (make-cor 2 2))
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; owner ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;data types:
+;owner is one of the following Symbol
+;--'P1 represents this bomb is put by player1
+;--'P2 represents this bomb is put by player2
+
+
+;data examples of bomb
+(define initial-bomb '())
 
 
 
-
-
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;player1:;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;player1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                                        ; 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;player1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;data types:
 ;player1 is one of the following:
 (define-struct player1 [cor direction] #:transparent)
-;-- (make-player1 cor Boolean String)
-;-- #f in homepage
+;-- (make-player1 cor String)
+;-- #f when layout is homepage
 
 ;interpretation
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;cor:;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;cor represents the position of player1
+
+;cor represents the location of player1 in the map
+;it is a structure as explained previously(in bombstate part).
 
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;direction:;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;direction is a String
-;represents the the direction of player1
+
+;direction is one of the following String:
+;-- "U" represents up direction of player
+;-- "L" represents left direction of player
+;-- "R" represents right direction of player
+;-- "D" represents down direction of player
 
 
-;example
+
+;data example
 (define initial-player1 (make-player1
                         (make-cor 0 0)
                         "D"))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;player1;;;;;;;;;;;;;end;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;player2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;player2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                                        ; 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;player2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;data types:
 ;player2 is one of the following:
 (define-struct player2 [cor direction] #:transparent)
 ;-- (make-player2 cor String)
-;-- f in homepage
+;-- #f when layout is homepage
 
-;interpretation is as similar as player1
-;just replace all "player1" with "player2"
+;interpretation
 
-;example
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;cor:;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;cor represents the location of player2 in the map
+;it is a structure as explained previously(in bombstate part).
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;direction:;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;direction is one of the following String:
+;-- "U" represents up direction of player
+;-- "L" represents left direction of player
+;-- "R" represents right direction of player
+;-- "D" represents down direction of player
+
+
+;data example
 (define initial-player2 (make-player2
                         (make-cor (- MAX-COLS 1) (- MAX-ROWS 1))
                         "U"))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;player2;;;;;;;;;;;end;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;roundtimer:;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;roundtimer;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                                           ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;roundtimer;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;data types:
 ;roundtimer is one of the following:
-;-- roundtimer is a Interger in the interval:
-;  ;-- from 120(included) to 0(included)
-;-- #f in homepage
+;--an Integer in the interval:
+;from 120(included) to 0(included)
+
+;-- #f when layout is homepage
 
 ;interpretation
 ;represents the countdown of one game
@@ -193,61 +207,64 @@
 (define initial-roundtimer 120)
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;roundtimer;;;;;;;end;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;maximum;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;maximum;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                                        ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;maximum;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;data types:
 ;maximum is one of the following:
-;maximum is an Interger in the interval:
-;  ;--from 3(included) to 6(included)
-;--#f in homepage
+;--an Integer in the interval:
+;from 3(included) to 6(included)
+
+;--#f when layout is homepage
 
 ;interpretation
 ;represents the maximum amounts of bomb that each player can put
-;the direction of each player should less than or equal maximum
-
-;additional note:
-;it is not a fixed constant
-;it will raise along with the roundtimer countdowns in one game
-;to reduce the probability of tie.
 
 ;examples
 (define initial-maximum 3)
 
 
+;get-symbol:
 
-;cor layout -> symbol
+;input/output:
+;layout cor -> symbol
+
+;purpose statement:
+;get symbol according to the given layout and cor
 (define (get-symbol layout cor)
   (if (in-bound? cor layout)
   (vector-ref
    (vector-ref layout (cor-row cor)) ;the row number
    (cor-column cor)) ;the column number
-  'ILEGAL)) ;else 'ILL
+  'ILEGAL)) ;else 'ILEGAL
 
+;in-bound?:
+
+;input/output:
 ;cor layout -> Boolean
+
+;purpose statement:
+;differentiate if the cor is in the valid range of the layout
+;if valid return #true
+;otherwise return #false
 (define (in-bound? cor layout)
   (and (<= 0 (cor-row cor) (- (vector-length layout) 1))     
        (<= 0 (cor-column cor) (- (vector-length (vector-ref layout 0)) 1))))
 
 
 ;convert:
-;data types
-;layout is a vector
-;cor is a cor or list of cor
+;data types:
+;cor is one of the following:
+;-- a single Cor structure
+;-- a list of Cor structure
+
+;input/output:
+;layout Cor Symbol -> layout
+
+;purpose statement:
+;change the layout according to the given layout Cor and Symbol
 (define (convert layout cor symbol)
   (cond
     [(empty? cor) layout]
