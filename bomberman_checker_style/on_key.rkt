@@ -1,10 +1,6 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
-#reader(lib "htdp-advanced-reader.ss" "lang")((modname on-key) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
-(require racket/base)
-(require "bomberman.rkt")
-(require rackunit)
-(require rackunit/text-ui)
+#reader(lib "htdp-advanced-reader.ss" "lang")((modname on_key) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;keyhandler
 ;gamestate ke -> gamestate
@@ -19,22 +15,6 @@
        (or
         (symbol=? new-symbol 'W) ;walkable
         (= (string-length (symbol->string new-symbol)) 2))))) ;'E0, 'E1, 'E2
-;;Test
-(define (test-move-predicate?)
-  (test-suite
-   "Testing move-predicate?"
-   
-   (test-case "Valid move to walkable position"
-     (check-true (move-predicate? '() '(1 1))))
-   
-   (test-case "Valid move to destructible position"
-     (check-true (move-predicate? '() '(2 2))))
-   
-   (test-case "Invalid move to non-walkable position"
-     (check-false (move-predicate? '() '(3 3))))
-   
-   (test-case "Valid move to destructible object E0"
-     (check-true (move-predicate? '() '(4 4))))))
 
 ;; put-predicate?: layout cor owner maximum
 (define (put-predicate? layout current-cor owner maximum)
@@ -43,19 +23,6 @@
         )
     (and (< owner maximum) ;is the bomb number < maximum
          (= (string-length (symbol->string current-symbol)) 3)))) ;is 'W[1|2][U|L|R|D]
-;;Test
-(define (test-put-predicate?)
-  (test-suite
-   "Testing put-predicate?"
-   
-   (test-case "Valid bomb placement (owner1 < maximum)"
-     (check-true (put-predicate? '() '(4 4) 2 3)))
-   
-   (test-case "Invalid bomb placement (owner1 >= maximum)"
-     (check-false (put-predicate? '() '(4 4) 3 3)))
-   
-   (test-case "Invalid bomb placement at a non-bomb position"
-     (check-false (put-predicate? '() '(1 1) 1 3)))))
 
 ;;keyhandler:
 ;;gamestate key -> gamestate

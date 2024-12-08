@@ -1,7 +1,16 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
-#reader(lib "htdp-advanced-reader.ss" "lang")((modname big-bang) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
+#reader(lib "htdp-advanced-reader.ss" "lang")((modname big_bang) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
+(require racket/base)
+(require "/Users/elenahu/Desktop/bomberman/bomberman_checker_style/render.rkt")
+(require "/Users/elenahu/Desktop/bomberman/bomberman_checker_style/public.rkt")
+(require "/Users/elenahu/Desktop/bomberman/bomberman_checker_style/on_tick.rkt")
+(require "/Users/elenahu/Desktop/bomberman/bomberman_checker_style/on_key.rkt")
+(require "/Users/elenahu/Desktop/bomberman/bomberman_checker_style/stop_when.rkt")
+
 ;main function
+
+
 (define (main gamestate)
   (big-bang gamestate
     [to-draw render]

@@ -12,7 +12,6 @@
        (< 0 row (- MAX-ROWS 1))                   
        (< 0 col (- MAX-COLS 1))))
 
-
 ;row col -> Boolean
 ;rules for generating 'W1D in random-layout
 (define (is-player1? row col)
@@ -22,7 +21,6 @@
 ;rules for generating 'W2U in random-layout
 (define (is-player2? row col)
   (= (+ (- MAX-ROWS 1) (- MAX-COLS 1)) (+ row col)))
-
 
 ;row col -> Boolean
 ;rules for generating fixed 'W in random-layout
@@ -59,6 +57,36 @@
    (and
     (= row 4)
     (<= 8 col 12))))
+;;Test
+(define is-YU?-tests
+  (test-suite
+   "Tests for is-YU?"
+   
+   ;; Y shape tests
+   (test-case "Y shape: col == row, 0 <= col <= 2, 0 <= row <= 2"
+     (check-equal? (is-YU? 1 1) #t)) ; col == row, within bounds
+   
+   (test-case "Y shape: 2 < col < 6, 0 <= row <= 2, col - row between 2 and 4"
+     (check-equal? (is-YU? 2 2) #t)) ; 2 < col < 6, col + row == 4
+   
+   (test-case "Y shape: col == 2, 2 <= row <= 4"
+     (check-equal? (is-YU? 3 2) #t)) ; col == 2, 2 <= row <= 4
+   
+   ;; U shape tests
+   (test-case "U shape: col == 8, 0 <= row <= 4"
+     (check-equal? (is-YU? 3 8) #t)) ; col == 8, within row bounds
+   
+   (test-case "U shape: col == 12, 0 <= row <= 4"
+     (check-equal? (is-YU? 4 12) #t)) ; col == 12, within row bounds
+   
+   (test-case "U shape: row == 4, 8 <= col <= 12"
+     (check-equal? (is-YU? 4 10) #t)) ; row == 4, col between 8 and 12
+   
+   ;; Negative test cases (should return #f)
+   (test-case "Not a Y or U shape"
+     (check-equal? (is-YU? 5 5) #f)) ; Neither Y nor U shape
+   (test-case "Out of bounds for Y and U"
+     (check-equal? (is-YU? 6 6) #f)))) ; Outside bounds for Y and U
 
 ;row col -> Boolean
 ;rules for generating 'I in homepage
@@ -113,6 +141,7 @@
        (+ col 1) ;move to the next cell on the same row
        (cons (rule-fn row col) acc) ;new accumulator
        rule-fn)))
+;;Test---missing---
 
 ;row acc rule-fn -> vector of vector of symbol
 ;generate layout
@@ -123,13 +152,11 @@
        (+ row 1) ;change to the next row
        (cons (generate-row row 0 '() rule-fn) acc) ;column starts from 0, acc starts from '()
        rule-fn)))
-
+;;Test---missing---
 
 ;homepage and random-layout
 (define homepage (generate-layout 0 '() homepage-rule))
 (define random-layout (generate-layout 0 '() random-layout-rule))
-
-
 
 ;constant definitions
 (define CELL-SIZE (image-width (bitmap "W.png"))) ;the width of the walkable cell image
@@ -196,9 +223,7 @@
           [(symbol=? symbol 'E2L) (overlay player2-image-L (bitmap "Boom.png"))]
           [(symbol=? symbol 'E2R) (overlay player2-image-R (bitmap "Boom.png"))])))
 
-
-
- ; render-row:
+; render-row:
 (define (render-row layout)
   (let loop ( ;function name loop
              [i 0] ;start: i=0
@@ -208,7 +233,7 @@
         acc
         (loop (+ i 1)
               (beside acc (render-cell (vector-ref layout i)))))))        
-
+;;Test---missing---
 
 ; render-layout
 ; layout -> Image
@@ -221,7 +246,7 @@
          acc
         (loop (+ i 1) 
               (above acc (render-row (vector-ref layout i)))))))
-
+;;Test---missing---
 
 ;convert-seconds-to-minutes-and-seconds-string:
 ;Number -> String
@@ -237,8 +262,7 @@
    ":"
    (cond
      [(< length-remaining-seconds 2) (string-append "0" (number->string remaining-seconds))]
-     [else (number->string remaining-seconds)]))))
-                   
+     [else (number->string remaining-seconds)]))))                   
 
 ;render-bar
 ;roundtimer maximum owner1 owner2 -> Image
@@ -251,7 +275,6 @@
    (text (string-append "Maximum bomb: " (number->string maximum)) 30 "indigo")
    SPACE
    (text (string-append "P2: " (number->string owner2)) 30 "indigo")))
-   
 
 ;count-num
 (define (count-num list-of-bomb)
@@ -259,15 +282,14 @@
     [(empty? list-of-bomb) 0]
     [else
      (add1 (count-num (rest list-of-bomb)))]))
-
+ 
 ;homepage-bar     
 (define homepage-bar
    (text "Enter space to start game"
         30
         "indigo"))
 
-
-;render
+;main render
 ;gamestate -> Image
 (define (render gamestate)
   (let (
@@ -295,3 +317,11 @@
         )
     (above (render-bar roundtimer maximum owner1 owner2)
            (render-layout (gamestate-layout gamestate))))])))
+
+;;Test---missing---
+
+
+
+
+
+
