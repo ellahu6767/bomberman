@@ -157,71 +157,65 @@
    #f
    #f
   #f))
-
 ;constant definitions
-(define CELL-SIZE (image-width (bitmap "W.png"))) ;the width of the walkable cell image
-
-(define player1-image-D (bitmap "P1D.png"))
-(define player1-image-U (bitmap "P1U.png"))
-(define player1-image-L (bitmap "P1L.png"))
-(define player1-image-R (bitmap "P1R.png"))
-
-(define player2-image-D (bitmap "P2D.png"))
-(define player2-image-U (bitmap "P2U.png"))
-(define player2-image-L (bitmap "P2L.png"))
-(define player2-image-R (bitmap "P2R.png"))
-
 (define SPACE (square 30 0 "white"))
+(define CELL-SIZE (image-width (bitmap "decorations/W.png"))) 
+
+(define player1-image-D (bitmap "decorations/P1D.png"))
+(define player1-image-U (bitmap "decorations/P1U.png"))
+(define player1-image-L (bitmap "decorations/P1L.png"))
+(define player1-image-R (bitmap "decorations/P1R.png"))
+
+(define player2-image-D (bitmap "decorations/P2D.png"))
+(define player2-image-U (bitmap "decorations/P2U.png"))
+(define player2-image-L (bitmap "decorations/P2L.png"))
+(define player2-image-R (bitmap "decorations/P2R.png"))
 
 ; render-cell
 ; symbol -> Image
 (define (render-cell symbol)
   (crop 0 0 CELL-SIZE CELL-SIZE
         (cond
-          [(symbol=? symbol 'D) (bitmap "D.png")]
-          [(symbol=? symbol 'I) (bitmap "U.png")]
-          [(symbol=? symbol 'W) (bitmap "W.png")]
-          [(symbol=? symbol 'B) (bitmap "B.png")]
-          [(symbol=? symbol 'E2) (bitmap "T.png")]
-          [(symbol=? symbol 'E1) (bitmap "T.png")]
-          [(symbol=? symbol 'E0) (bitmap "T.png")]
-               
-          
+          [(symbol=? symbol 'D) (bitmap "decorations/D.png")]
+          [(symbol=? symbol 'I) (bitmap "decorations/I.png")]
+          [(symbol=? symbol 'W) (bitmap "decorations/W.png")]
+          [(symbol=? symbol 'B) (bitmap "decorations/B.png")]
+          [(symbol=? symbol 'E2) (bitmap "decorations/E.png")]
+          [(symbol=? symbol 'E1) (bitmap "decorations/E.png")]
+          [(symbol=? symbol 'E0) (bitmap "decorations/E.png")]
 
-          ;player1
-          [(symbol=? symbol 'W1L) (overlay player1-image-L (bitmap "W.png"))]
-          [(symbol=? symbol 'W1R) (overlay player1-image-R (bitmap "W.png"))]
-          [(symbol=? symbol 'W1U) (overlay player1-image-U (bitmap "W.png"))]
-          [(symbol=? symbol 'W1D) (overlay player1-image-D (bitmap "W.png"))]
-          [(symbol=? symbol 'B1L) (overlay player1-image-L (bitmap "B.png"))]
-          [(symbol=? symbol 'B1R) (overlay player1-image-R (bitmap "B.png"))]
-          [(symbol=? symbol 'B1U) (overlay player1-image-U (bitmap "B.png"))]
-          [(symbol=? symbol 'B1D) (overlay player1-image-D (bitmap "B.png"))]
-  
+          ; player1
+          [(symbol=? symbol 'W1L) (overlay player1-image-L (bitmap "decorations/W.png"))]
+          [(symbol=? symbol 'W1R) (overlay player1-image-R (bitmap "decorations/W.png"))]
+          [(symbol=? symbol 'W1U) (overlay player1-image-U (bitmap "decorations/W.png"))]
+          [(symbol=? symbol 'W1D) (overlay player1-image-D (bitmap "decorations/W.png"))]
+          [(symbol=? symbol 'B1L) (overlay player1-image-L (bitmap "decorations/B.png"))]
+          [(symbol=? symbol 'B1R) (overlay player1-image-R (bitmap "decorations/B.png"))]
+          [(symbol=? symbol 'B1U) (overlay player1-image-U (bitmap "decorations/B.png"))]
+          [(symbol=? symbol 'B1D) (overlay player1-image-D (bitmap "decorations/B.png"))]
 
-          ;player2
-          [(symbol=? symbol 'W2L) (overlay player2-image-L (bitmap "W.png"))]
-          [(symbol=? symbol 'W2R) (overlay player2-image-R (bitmap "W.png"))]
-          [(symbol=? symbol 'W2U) (overlay player2-image-U (bitmap "W.png"))]
-          [(symbol=? symbol 'W2D) (overlay player2-image-D (bitmap "W.png"))]
-          [(symbol=? symbol 'B2L) (overlay player2-image-L (bitmap "B.png"))]
-          [(symbol=? symbol 'B2R) (overlay player2-image-R (bitmap "B.png"))]
-          [(symbol=? symbol 'B2U) (overlay player2-image-U (bitmap "B.png"))]
-          [(symbol=? symbol 'B2D) (overlay player2-image-D (bitmap "B.png"))]
+          ; player2
+          [(symbol=? symbol 'W2L) (overlay player2-image-L (bitmap "decorations/W.png"))]
+          [(symbol=? symbol 'W2R) (overlay player2-image-R (bitmap "decorations/W.png"))]
+          [(symbol=? symbol 'W2U) (overlay player2-image-U (bitmap "decorations/W.png"))]
+          [(symbol=? symbol 'W2D) (overlay player2-image-D (bitmap "decorations/W.png"))]
+          [(symbol=? symbol 'B2L) (overlay player2-image-L (bitmap "decorations/B.png"))]
+          [(symbol=? symbol 'B2R) (overlay player2-image-R (bitmap "decorations/B.png"))]
+          [(symbol=? symbol 'B2U) (overlay player2-image-U (bitmap "decorations/B.png"))]
+          [(symbol=? symbol 'B2D) (overlay player2-image-D (bitmap "decorations/B.png"))]
 
-          ;player1-dead-image
+          ; player1-dead-image
+          [(symbol=? symbol 'E1D) (overlay player1-image-D (bitmap "decorations/Boom.png"))]
+          [(symbol=? symbol 'E1U) (overlay player1-image-U (bitmap "decorations/Boom.png"))]
+          [(symbol=? symbol 'E1L) (overlay player1-image-L (bitmap "decorations/Boom.png"))]
+          [(symbol=? symbol 'E1R) (overlay player1-image-R (bitmap "decorations/Boom.png"))]
 
-          [(symbol=? symbol 'E1D) (overlay player1-image-D (bitmap "Boom.png"))]
-          [(symbol=? symbol 'E1U) (overlay player1-image-U (bitmap "Boom.png"))]
-          [(symbol=? symbol 'E1L) (overlay player1-image-L (bitmap "Boom.png"))]
-          [(symbol=? symbol 'E1R) (overlay player1-image-R (bitmap "Boom.png"))]
+          ; player2-dead-image
+          [(symbol=? symbol 'E2D) (overlay player2-image-D (bitmap "decorations/Boom.png"))]
+          [(symbol=? symbol 'E2U) (overlay player2-image-U (bitmap "decorations/Boom.png"))]
+          [(symbol=? symbol 'E2L) (overlay player2-image-L (bitmap "decorations/Boom.png"))]
+          [(symbol=? symbol 'E2R) (overlay player2-image-R (bitmap "decorations/Boom.png"))])))
 
-          ;player2-dead-image
-
-          [(symbol=? symbol 'E2D) (overlay player2-image-D (bitmap "Boom.png"))]
-          [(symbol=? symbol 'E2U) (overlay player2-image-U (bitmap "Boom.png"))]
-          [(symbol=? symbol 'E2L) (overlay player2-image-L (bitmap "Boom.png"))]
-          [(symbol=? symbol 'E2R) (overlay player2-image-R (bitmap "Boom.png"))])))
 
 ; render-row:
 (define (render-row layout)
