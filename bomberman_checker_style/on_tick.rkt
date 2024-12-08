@@ -9,28 +9,41 @@
 (require "public.rkt")
 (require "render.rkt")
 
-
 (provide (all-defined-out))
 
+;check-I?:
 
-
-;constant definitions
-(define BOOM-MAX-DISTANCE 2)
-
+;input/output:
 ;cor layout -> Boolean
+
+;purpose statement:
+;check if the symbol of the given cor in the given layout is 'I
+;if it is,returns #t
+;otherwise, returns #f
 (define (check-I? layout cor)
   (eq? (get-symbol layout cor) 'I))
 
+;check-D?:
+
+;input/output:
 ;cor layout -> Boolean
+
+;purpose statement:
+;check if the symbol of the given cor in the given layout is 'D
+;if it is,returns #t
+;otherwise, returns #f
 (define (check-D? layout cor)
   (eq? (get-symbol layout cor) 'D))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;boom-range;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;meet'D add 'D cor to boom-range and stop
-;meet'I , stop
-;reach the boom-max-distance, stop
-;otherwise, continue loop
-;bombstate -> list of cor
+
+;single-boom-range:
+
+;input/output:
+;bombstate layout -> list<Cor>
+
+;purpose statement:
+;calculate the boom-range of the given single bombstate
+;call extend-direction function to calculate the boom-range of each direction
 (define (single-boom-range bombstate layout)
   (let* (
         [center (bombstate-cor bombstate)]
@@ -60,9 +73,26 @@
         )
     (cons center
           (apply append boom-range-except-center))))
+       ;;use apply append to convert the (list (list<Cor)(list<Cor)(list<Cor)(list<Cor))
+       ;;to a single list<Cor>
 
 
-;list of cor -> list of cor
+
+;extend-direction:
+
+;date types:
+;potential-list is a list<Cor>
+;represents the max-boom-range in each direction
+
+;input/output:
+;potential-list layout -> list<Cor>
+
+;purpose statement:
+;extend the explosion range in each direction
+;the extending rule is:
+;when meet first 'D , add the Cor of 'D to the output list<Cor> but
+;in this direction
+;when meet first 'I , directly stop extending in this direction.
 (define (extend-direction potential-list layout)
   (cond
     [(or
@@ -79,17 +109,26 @@
      (cons (first potential-list)
            (extend-direction (rest potential-list) layout))]))
 
-; boom-range: list<bombstate> layout -> list<cor>
+;boom-range:
+
+;input/output:
+;list<Bombstate> layout -> list<Cor>
+
+;purpose statement:
+;calculate the boom-range of a list<Bombstate>
 (define (boom-range bomb-list layout)
   (apply append
-         (map (lambda (bombstate)
+         (map
+          (lambda (bombstate)
                 (single-boom-range bombstate layout))
               bomb-list)))
 
+;boom:
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;boom;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;input/output:
 ;gamestate -> gamestate
+
+;purpose statement:
 ;filter the count-down=0 List<Bomb>, calculate the exploding range,
 ;by chain effect calculate the new exploding range(bomb1 -> bomb2 -> bomb3),
 ;put the total exploding cors into accumulator,
@@ -173,30 +212,54 @@
 
 
 ;chain-explosion:
-;list-of-cor bomb-list layout -> bomb-list
+
+;input/output:
+;list<Cor> list<Bombstate> -> list<Bombstate>
+
+;purpose statement:
+;handle the chain-explosion,the rule is:
+;if a bomb's Cor matches any Cor in the initial-boom-cor (a list<Cor>)
+;and its countdown is not 0
+;this bomb's countdown will be set to 0
+;otherwise,the bomb will be unchanged
+;in final, returns the updated list<Bombstate> after applying the rule to all
+;the element in the given bomb-list
 (define (chain-explosion initial-boom-cor bomb-list)
     (map
      (lambda (bombstate)
              (if 
                (and
                 (not (= (bombstate-countdown bombstate) 0))
-                (in-boom-cor? (bombstate-cor bombstate) initial-boom-cor)) ;a bomb which count-down isnt 0, but is in boom range
-
+                (in-boom-cor? (bombstate-cor bombstate) initial-boom-cor)) 
                 (make-bombstate (bombstate-cor bombstate)
                                 0
-                                (bombstate-owner bombstate)) ;set this bomb count-down to 0
+                                (bombstate-owner bombstate))
              
                 bombstate))
+              bomb-list))
      
-              bomb-list)
-    ) ;return the updated bomb list under chain explosion effect
 
-;cor cor -> Boolean
+;cor=?:
+
+;input/output:
+;Cor Cor -> Boolean
+
+;purpose statement:
+;returns #t if the given two cors has both the same column and row
+;otherwise returns #f
 (define (cor=? cor1 cor2)
   (and (= (cor-column cor1) (cor-column cor2))
        (= (cor-row cor1) (cor-row cor2))))
-  
-;cor list<cor> -> Boolean
+
+
+;in-boom-cor?:
+
+;input/output:
+;Cor list<Cor> -> Boolean
+
+;purpose statement:
+;returns #t if the given cor is in the given list<Cor>
+;otherwise returns #f
 (define (in-boom-cor? cor cor-list)
   (cond
     [(empty? cor-list) #f]
@@ -206,32 +269,71 @@
       #t
       (in-boom-cor? cor (rest cor-list)))]))
   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;boom;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
       
+;remove-bomb:
+
+;input/output:
 ;list<bombstate> -> list<bombstate>
-;convert new bomb list with every countdown > 0
+
+;purpose statement:
+;remove the bombstate which countdown is 0 in the giveb bomb-list
+
 (define (remove-bomb bomb-list)
   (filter (lambda (bomb)
             (> (bombstate-countdown bomb) 0)) bomb-list))
 
 
+;updated-roundtimer:
+
+;input/output:
 ;Number -> Number
+
+;purpose statement:
+;decreases the roundtimer by 1 in each tick,
+;but the roundtimer doesn't go below 0
+
 (define (updated-roundtimer roundtimer)
   (max 0 (sub1 roundtimer))) 
 
+
+;check-roundtimer?:
+
+;input/output:
 ;Number -> Boolean
+
+;purpose statement:
+;returns #t if the roundtimer is divisible by 30 (except 120 or 0)
+;otherwise returns #f
+
 (define (check-roundtimer? roundtimer)
   (and
    (not (= roundtimer 120))
    (not (= roundtimer 0))    
    (= (modulo roundtimer 30) 0)))
 
+
+;add-maximum:
+
+;input/output:
 ;Number -> Number
+
+;purpose statement:
+;increases the given maximum value by 1
+;but maximum cannot exceed 6
+
 (define (add-maximum maximum)
   (min 6 (add1 maximum)))
 
-;bomb -> bomb
+
+;updated-bomb:
+;input/output:
+;list<bombstate> -> list<bombstate>
+
+;purpose statement:
+;updates the countdown of each bombstate in the bomb-list (sub1 in each tick)
+;but the countdown cannot go below 0
+
 (define (updated-bomb bomb)
   (map (lambda (bombstate)
          (make-bombstate
@@ -240,33 +342,60 @@
           (bombstate-owner bombstate)))
        bomb))
 
-;list<bomb> -> Boolean
-(define (check-zero? lob)
+
+;check-zero?:
+;input/output:
+;list<bombstate> -> Boolean
+
+;purpose statement:
+;returns #t if there is any bombstate in the bomb-list has countdown equal to 0
+;otherwise returns #f
+
+(define (check-zero? bomb-list)
   (cond
-    [(empty? lob) #f]
+    [(empty? bomb-list) #f]
     [else
      (if
-     (= (bombstate-countdown (first lob)) 0)
+     (= (bombstate-countdown (first bomb-list)) 0)
      #t
-     (check-zero? (rest lob)))]))
+     (check-zero? (rest bomb-list)))]))
 
-;update-T-symbols
+
+;update-T-symbols:
+
+;input/output:
 ;symbol -> symbol
+
+;purpose statement:
+;change the symbol in sequence 'E2->'E1->'E0->'W in each tick
 (define (update-T-symbols symbol)
   (cond
     [(equal? symbol 'E2) 'E1]
     [(equal? symbol 'E1) 'E0]
     [(equal? symbol 'E0) 'W]
     [else symbol]))
-           
+
+;updated-layout:
+
+;input/output:
 ;layout -> layout
+
+;purpose statement:
+;updates the layout by applying the update-T-symbols function to every symbol
+;in the layout
 (define (updated-layout layout)
   (vector-map
    (lambda (row)
-           (vector-map update-T-symbols row)) ;every symbol on this row is gonna to be updated
-   layout)) ;every row in this layout will update their symbols
-         
+           (vector-map update-T-symbols row)) 
+   layout)) 
+
+;timehandler:
+
+;input/output
 ;gamestate -> gamestate
+
+;purpose statement:
+
 (define (timehandler gamestate)
   (let (
         [layout (gamestate-layout gamestate)]
