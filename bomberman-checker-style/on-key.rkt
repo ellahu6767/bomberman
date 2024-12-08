@@ -37,11 +37,11 @@
      (check-true (move-predicate? '() '(4 4))))))
 
 ;; put-predicate?: layout cor owner maximum
-(define (put-predicate? layout current-cor owner1 maximum)
+(define (put-predicate? layout current-cor owner maximum)
   (let (
         [current-symbol (get-symbol layout current-cor)]
         )
-    (and (< owner1 maximum) ;is the bomb number < maximum
+    (and (< owner maximum) ;is the bomb number < maximum
          (= (string-length (symbol->string current-symbol)) 3)))) ;is 'W[1|2][U|L|R|D]
 ;;Test
 (define (test-put-predicate?)

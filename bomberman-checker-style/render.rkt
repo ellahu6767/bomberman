@@ -584,7 +584,7 @@
         "indigo"))
 
 
-;render
+;main render
 ;gamestate -> Image
 (define (render gamestate)
   (let (

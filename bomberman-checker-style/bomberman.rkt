@@ -618,8 +618,6 @@
                 (single-boom-range bombstate layout))
               bomb-list)))
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;boom;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;gamestate -> gamestate 
 (define (boom gamestate) 
@@ -868,13 +866,12 @@
         (symbol=? new-symbol 'W)
         (= (string-length (symbol->string new-symbol)) 2)))))
 
-(define (put-predicate? layout current-cor owner1 maximum)
+(define (put-predicate? layout current-cor owner maximum)
   (let (
         [current-symbol (get-symbol layout current-cor)]
         )
-    (and (< owner1 maximum)
+    (and (< owner maximum)
          (= (string-length (symbol->string current-symbol)) 3))))
-
 
 ;;keyhandler:
 ;;gamestate key -> gamestate
