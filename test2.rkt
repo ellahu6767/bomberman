@@ -16,6 +16,37 @@
      (check-equal? (is-U? 2 9) #f))))
 
 ;;Test
+(define is-YU?-tests
+  (test-suite
+   "Tests for is-YU?"
+   
+   ;; Y shape tests
+   (test-case "Y shape: col == row, 0 <= col <= 2, 0 <= row <= 2"
+     (check-equal? (is-YU? 1 1) #t)) ; col == row, within bounds
+   
+   (test-case "Y shape: 2 < col < 6, 0 <= row <= 2, col - row between 2 and 4"
+     (check-equal? (is-YU? 2 2) #t)) ; 2 < col < 6, col + row == 4
+   
+   (test-case "Y shape: col == 2, 2 <= row <= 4"
+     (check-equal? (is-YU? 3 2) #t)) ; col == 2, 2 <= row <= 4
+   
+   ;; U shape tests
+   (test-case "U shape: col == 8, 0 <= row <= 4"
+     (check-equal? (is-YU? 3 8) #t)) ; col == 8, within row bounds
+   
+   (test-case "U shape: col == 12, 0 <= row <= 4"
+     (check-equal? (is-YU? 4 12) #t)) ; col == 12, within row bounds
+   
+   (test-case "U shape: row == 4, 8 <= col <= 12"
+     (check-equal? (is-YU? 4 10) #t)) ; row == 4, col between 8 and 12
+   
+   ;; Negative test cases (should return #f)
+   (test-case "Not a Y or U shape"
+     (check-equal? (is-YU? 5 5) #f)) ; Neither Y nor U shape
+   (test-case "Out of bounds for Y and U"
+     (check-equal? (is-YU? 6 6) #f)))) ; Outside bounds for Y and U
+
+;;Test
 (define is-player1?-tests
   (test-suite
    "Tests for is-player1?"

@@ -1,15 +1,25 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
 #reader(lib "htdp-advanced-reader.ss" "lang")((modname big_bang) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
+(require 2htdp/image)
+(require 2htdp/universe)
+(require racket/vector)
+(require racket/system)
 (require racket/base)
-(require "/Users/elenahu/Desktop/bomberman/bomberman_checker_style/render.rkt")
-(require "/Users/elenahu/Desktop/bomberman/bomberman_checker_style/public.rkt")
-(require "/Users/elenahu/Desktop/bomberman/bomberman_checker_style/on_tick.rkt")
-(require "/Users/elenahu/Desktop/bomberman/bomberman_checker_style/on_key.rkt")
-(require "/Users/elenahu/Desktop/bomberman/bomberman_checker_style/stop_when.rkt")
+(require "render.rkt")
+(require "on_tick.rkt")
+(require "on_key.rkt")
+(require "stop_when.rkt")
+(require "public.rkt")
+
+;structure
+(define-struct gamestate [layout bomb player1 player2 roundtimer maximum quit?] #:transparent)
+(define-struct bombstate [cor countdown owner] #:transparent)
+(define-struct cor [column row] #:transparent)
+(define-struct player1 [cor direction] #:transparent)
+(define-struct player2 [cor direction] #:transparent)
 
 ;main function
-
 
 (define (main gamestate)
   (big-bang gamestate
@@ -17,33 +27,8 @@
     [on-key keyhandler]
     [on-tick timehandler 0.5]
     [stop-when end?
-               final]))
-    
-  
-     
-
-             
-(define initial-state
-  (make-gamestate
-   random-layout
-   '()
-   initial-player1
-   initial-player2
-   initial-roundtimer
-   initial-maximum
-  #f))
-
-(define homepage-state
-  (make-gamestate
-   homepage
-   '()
-   #f
-   #f
-   #f
-   #f
-  #f))
-
-
+               final]
+))
 
 ;application
 (system "open ~/Desktop/backup/background.mp3")

@@ -1,8 +1,27 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
 #reader(lib "htdp-advanced-reader.ss" "lang")((modname render) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
-(define MAX-ROWS 11) 
-(define MAX-COLS 15)
+(require 2htdp/image)
+(require 2htdp/universe)
+(require racket/vector)
+(require racket/system)
+(require racket/base)
+(require "public.rkt")
+
+(provide homepage)
+(provide random-layout)
+(provide homepage-state)
+(provide initial-state)
+(provide CELL-SIZE)
+
+(provide count-num)
+(provide render)
+
+(define-struct gamestate [layout bomb player1 player2 roundtimer maximum quit?] #:transparent)
+(define-struct bombstate [cor countdown owner] #:transparent)
+(define-struct cor [column row] #:transparent)
+(define-struct player1 [cor direction] #:transparent)
+(define-struct player2 [cor direction] #:transparent)
 
 ;row col -> Boolean
 ;rules for generating 'U in random-layout
@@ -57,36 +76,6 @@
    (and
     (= row 4)
     (<= 8 col 12))))
-;;Test
-(define is-YU?-tests
-  (test-suite
-   "Tests for is-YU?"
-   
-   ;; Y shape tests
-   (test-case "Y shape: col == row, 0 <= col <= 2, 0 <= row <= 2"
-     (check-equal? (is-YU? 1 1) #t)) ; col == row, within bounds
-   
-   (test-case "Y shape: 2 < col < 6, 0 <= row <= 2, col - row between 2 and 4"
-     (check-equal? (is-YU? 2 2) #t)) ; 2 < col < 6, col + row == 4
-   
-   (test-case "Y shape: col == 2, 2 <= row <= 4"
-     (check-equal? (is-YU? 3 2) #t)) ; col == 2, 2 <= row <= 4
-   
-   ;; U shape tests
-   (test-case "U shape: col == 8, 0 <= row <= 4"
-     (check-equal? (is-YU? 3 8) #t)) ; col == 8, within row bounds
-   
-   (test-case "U shape: col == 12, 0 <= row <= 4"
-     (check-equal? (is-YU? 4 12) #t)) ; col == 12, within row bounds
-   
-   (test-case "U shape: row == 4, 8 <= col <= 12"
-     (check-equal? (is-YU? 4 10) #t)) ; row == 4, col between 8 and 12
-   
-   ;; Negative test cases (should return #f)
-   (test-case "Not a Y or U shape"
-     (check-equal? (is-YU? 5 5) #f)) ; Neither Y nor U shape
-   (test-case "Out of bounds for Y and U"
-     (check-equal? (is-YU? 6 6) #f)))) ; Outside bounds for Y and U
 
 ;row col -> Boolean
 ;rules for generating 'I in homepage
@@ -157,6 +146,26 @@
 ;homepage and random-layout
 (define homepage (generate-layout 0 '() homepage-rule))
 (define random-layout (generate-layout 0 '() random-layout-rule))
+
+(define initial-state
+  (make-gamestate
+   random-layout
+   '()
+   initial-player1
+   initial-player2
+   initial-roundtimer
+   initial-maximum
+  #f))
+
+(define homepage-state
+  (make-gamestate
+   homepage
+   '()
+   #f
+   #f
+   #f
+   #f
+  #f))
 
 ;constant definitions
 (define CELL-SIZE (image-width (bitmap "W.png"))) ;the width of the walkable cell image

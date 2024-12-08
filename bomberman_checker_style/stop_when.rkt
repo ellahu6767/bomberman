@@ -1,8 +1,22 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
 #reader(lib "htdp-advanced-reader.ss" "lang")((modname stop_when) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
-;gamestate -> Boolean
-;in homepage or random-layout,press esc,return#t
+(require 2htdp/image)
+(require 2htdp/universe)
+(require racket/vector)
+(require racket/system)
+(require racket/base)
+(require "public.rkt")
+(require "render.rkt")
+
+(provide final)
+(provide end?)
+
+(define-struct gamestate [layout bomb player1 player2 roundtimer maximum quit?] #:transparent)
+(define-struct bombstate [cor countdown owner] #:transparent)
+(define-struct cor [column row] #:transparent)
+(define-struct player1 [cor direction] #:transparent)
+(define-struct player2 [cor direction] #:transparent)
 
 ;in random-layout, one of the following situation,return #t
 ;players all died

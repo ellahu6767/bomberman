@@ -1,6 +1,22 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
 #reader(lib "htdp-advanced-reader.ss" "lang")((modname on_tick) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
+(require 2htdp/image)
+(require 2htdp/universe)
+(require racket/vector)
+(require racket/system)
+(require racket/base)
+(require "public.rkt")
+(require "render.rkt")
+
+(provide timehandler)
+
+(define-struct gamestate [layout bomb player1 player2 roundtimer maximum quit?] #:transparent)
+(define-struct bombstate [cor countdown owner] #:transparent)
+(define-struct cor [column row] #:transparent)
+(define-struct player1 [cor direction] #:transparent)
+(define-struct player2 [cor direction] #:transparent)
+
 ;constant definitions
 (define BOOM-MAX-DISTANCE 2)
 
@@ -11,8 +27,6 @@
 ;cor layout -> Boolean
 (define (check-D? layout cor)
   (eq? (get-symbol layout cor) 'D))
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;boom-range;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;meet'D add 'D cor to boom-range and stop
