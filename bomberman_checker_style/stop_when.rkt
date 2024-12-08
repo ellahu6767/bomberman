@@ -9,14 +9,9 @@
 (require "public.rkt")
 (require "render.rkt")
 
-(provide final)
-(provide end?)
 
-(define-struct gamestate [layout bomb player1 player2 roundtimer maximum quit?] #:transparent)
-(define-struct bombstate [cor countdown owner] #:transparent)
-(define-struct cor [column row] #:transparent)
-(define-struct player1 [cor direction] #:transparent)
-(define-struct player2 [cor direction] #:transparent)
+(provide (all-defined-out))
+
 
 ;in random-layout, one of the following situation,return #t
 ;players all died

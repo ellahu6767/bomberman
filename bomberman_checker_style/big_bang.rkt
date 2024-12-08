@@ -12,12 +12,7 @@
 (require "stop_when.rkt")
 (require "public.rkt")
 
-;structure
-(define-struct gamestate [layout bomb player1 player2 roundtimer maximum quit?] #:transparent)
-(define-struct bombstate [cor countdown owner] #:transparent)
-(define-struct cor [column row] #:transparent)
-(define-struct player1 [cor direction] #:transparent)
-(define-struct player2 [cor direction] #:transparent)
+
 
 ;main function
 

@@ -9,20 +9,17 @@
 (require "public.rkt")
 (require "render.rkt")
 
-(provide keyhandler)
+
+(provide (all-defined-out))
 
 ;; move-predicate?: gamestate cor -> Boolean
-(define-struct gamestate [layout bomb player1 player2 roundtimer maximum quit?] #:transparent)
-(define-struct bombstate [cor countdown owner] #:transparent)
-(define-struct cor [column row] #:transparent)
-(define-struct player1 [cor direction] #:transparent)
-(define-struct player2 [cor direction] #:transparent)
+
 
 (define (move-predicate? layout new-cor)
   (let (
         [new-symbol (get-symbol layout new-cor)]
         )
-  (and (in-bound? new-cor)
+  (and (in-bound? new-cor layout)
        (or
         (symbol=? new-symbol 'W) ;walkable
         (= (string-length (symbol->string new-symbol)) 2))))) ;'E0, 'E1, 'E2

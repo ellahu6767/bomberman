@@ -8,20 +8,11 @@
 (require racket/base)
 (require "public.rkt")
 
-(provide homepage)
-(provide random-layout)
-(provide homepage-state)
-(provide initial-state)
-(provide CELL-SIZE)
 
-(provide count-num)
-(provide render)
+(provide (all-defined-out))
 
-(define-struct gamestate [layout bomb player1 player2 roundtimer maximum quit?] #:transparent)
-(define-struct bombstate [cor countdown owner] #:transparent)
-(define-struct cor [column row] #:transparent)
-(define-struct player1 [cor direction] #:transparent)
-(define-struct player2 [cor direction] #:transparent)
+
+
 
 ;row col -> Boolean
 ;rules for generating 'U in random-layout

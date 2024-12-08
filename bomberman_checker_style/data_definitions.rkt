@@ -2,6 +2,8 @@
 ;; about the language level of this file in a form that our tools can easily process.
 #reader(lib "htdp-advanced-reader.ss" "lang")((modname data_definitions) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
 (require racket/base)
+(provide (all-defined-out))
+(require "public.rkt")
 
 ;gamestate is a structure
 (define-struct gamestate [layout bomb player1 player2 roundtimer maximum quit?] #:transparent)
@@ -73,6 +75,7 @@
 ;cor is a structure
 (define-struct cor [column row] #:transparent)
 ;(make-cor Integer Integer)
+
 
 ;interpretation:
 ;represents the cell location in the game

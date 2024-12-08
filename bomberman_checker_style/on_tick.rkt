@@ -9,13 +9,10 @@
 (require "public.rkt")
 (require "render.rkt")
 
-(provide timehandler)
 
-(define-struct gamestate [layout bomb player1 player2 roundtimer maximum quit?] #:transparent)
-(define-struct bombstate [cor countdown owner] #:transparent)
-(define-struct cor [column row] #:transparent)
-(define-struct player1 [cor direction] #:transparent)
-(define-struct player2 [cor direction] #:transparent)
+(provide (all-defined-out))
+
+
 
 ;constant definitions
 (define BOOM-MAX-DISTANCE 2)
@@ -33,46 +30,54 @@
 ;meet'I , stop
 ;reach the boom-max-distance, stop
 ;otherwise, continue loop
-(define (extend-direction direction-fn layout)
-  (let loop (
-             [n 1]
-             [acc '()]
-             )
-    (cond
-      [(> n BOOM-MAX-DISTANCE) acc] ;return the list acc when n=3
-      [else
-       (let (
-             [new-cor (direction-fn n)]
-             )
-         (cond
-           [(not (in-bound? new-cor)) acc]
-           [(check-I? layout new-cor) acc]
-           [(check-D? layout new-cor) (cons new-cor acc)]
-           [else (loop
-                  (add1 n)
-                  (cons new-cor acc))]))])))
-
-
-;boom-range:
+;bombstate -> list of cor
 (define (single-boom-range bombstate layout)
   (let* (
-         [center (bombstate-cor bombstate)]
-         
-         [directions
-          (list
-           (lambda (n) (make-cor (cor-column center) (- (cor-row center) n)))
-           (lambda (n) (make-cor (cor-column center) (+ (cor-row center) n)))
-           (lambda (n) (make-cor (- (cor-column center) n) (cor-row center)))
-           (lambda (n) (make-cor (+ (cor-column center) n) (cor-row center))))]
+        [center (bombstate-cor bombstate)]
+        [cor-x (cor-column center)]
+        [cor-y (cor-row center)]
 
-         [boom-range-except-center
-          (map
-           (lambda (direction-fn)
-             (extend-direction direction-fn layout))
-               directions)]
-         )
+        [potential-boom-range-except-center
+         (list
+        ;;up
+         (list (make-cor cor-x (- cor-y 1))
+               (make-cor cor-x (- cor-y 2)))
+        ;;down
+         (list (make-cor cor-x (+ cor-y 1))
+               (make-cor cor-x (+ cor-y 2)))
+        ;;left
+         (list (make-cor (- cor-x 1) cor-y)
+               (make-cor (- cor-x 2) cor-y))
+        ;;right
+         (list (make-cor (+ cor-x 1) cor-y)
+               (make-cor (+ cor-x 2) cor-y)))]
+
+        [boom-range-except-center
+         (map
+          (lambda(potential-list)
+            (extend-direction potential-list layout))
+          potential-boom-range-except-center)]
+        )
     (cons center
           (apply append boom-range-except-center))))
+
+
+;list of cor -> list of cor
+(define (extend-direction potential-list layout)
+  (cond
+    [(or
+      (empty? potential-list)
+      (not (in-bound? (first potential-list) layout)))
+     '()]
+
+    [(check-I? layout (first potential-list)) '()]
+
+    [(check-D? layout (first potential-list))
+     (list (first potential-list))]
+
+    [else
+     (cons (first potential-list)
+           (extend-direction (rest potential-list) layout))]))
 
 ; boom-range: list<bombstate> layout -> list<cor>
 (define (boom-range bomb-list layout)
@@ -114,7 +119,7 @@
                       (not (in-boom-cor? (bombstate-cor bombstate) processed-bombs))))
                current-bomb-list)] 
              [boom-cor (boom-range exploding-list current-layout)] ;the list of cors of bombs in exploding list on the current layout
-             [updated-bomb-list (chain-explosion boom-cor current-bomb-list current-layout)] ;updated List<Bomb> under chain explosion effect
+             [updated-bomb-list (chain-explosion boom-cor current-bomb-list)] ;updated List<Bomb> under chain explosion effect
              [new-processed-bombs (append processed-bombs (map bombstate-cor exploding-list))] ;extract the cors from the bombs in exploding list
              ; thus the processed-bombs should be a list of cors
              [new-layout
