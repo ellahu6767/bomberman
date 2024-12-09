@@ -133,7 +133,7 @@
 ;Return the Tie Image.
 (define (tie gamestate)
   (overlay
-   (text "You Can Get Married!"
+   (text "Tie!"
          70
          "RED")
    (render gamestate)))
