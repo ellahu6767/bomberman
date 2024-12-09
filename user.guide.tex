@@ -1,0 +1,96 @@
+\documentclass[12pt]{article}
+\usepackage{geometry}
+\usepackage{titlesec}
+\usepackage{fontsize}
+\usepackage{setspace}
+\usepackage{listings} % 用于代码展示
+
+\renewcommand{\normalsize}{\fontsize{14}{17}\selectfont}
+\setlength{\parskip}{0pt} % 段落间距设为 0
+\setlength{\parindent}{1.27cm} % 强制首行缩进
+
+% 页面边距设置
+\geometry{a4paper, left=1in, right=1in, top=1in, bottom=1in}
+
+% lstlisting 设置
+\lstset{
+  basicstyle=\ttfamily\fontsize{12}{14}\selectfont, % 设置字体大小为 12pt，行间距为 14pt
+  breaklines=true,                                  % 自动换行
+  breakatwhitespace=true,                           % 在空白处换行
+  columns=flexible,                                 % 修复字符间距问题
+  frame=single,                                     % 添加边框
+  numbers=left,                                     % 显示行号
+  numberstyle=\fontsize{10}{12}\selectfont,         % 设置行号字体大小为 10pt，行间距为 12pt
+  showstringspaces=false                            % 不显示空格标记
+}
+
+% Section 样式
+\titleformat{\section}[block]
+  {\normalfont\fontsize{25}{22}\bfseries\centering}
+  {}{0em}{}[\titlerule]
+
+% Subsection 样式
+\titleformat{\subsection}[block]
+  {\normalfont\fontsize{18}{20}\bfseries\centering}
+  {}{0em}{}[\titlerule]
+
+% Title 设置
+\title{Bomberman Game User Guide}
+\author{}
+\date{}
+
+\begin{document}
+
+\makeatletter
+\renewcommand{\maketitle}{
+  \begin{center}
+    {\fontsize{36}{40}\bfseries \@title \par} % 主标题：字体大小 36pt，行间距 40pt，加粗
+    \vskip 1em % 标题与正文的间距
+    {\fontsize{14}{18} \@author \par} % 作者：字体大小 14pt，行间距 18pt
+    \vskip 1em
+    {\fontsize{12}{14} \@date \par} % 日期：字体大小 12pt，行间距 14pt
+  \end{center}
+}
+\maketitle
+
+\section*{Homepage}
+\hspace{1.27cm}Press ``space'' key to enter the main page.
+
+\section*{Movement}
+\hspace{1.27cm}Player 1: The orange cat at the left-top corner. \\
+\indent Use ``up'', ``down'', ``left'', ``right'' keys to move up, down, left, right. Use ``space'' key to put the bomb.
+
+\indent Player 2: The brown dog at the right-down corner. \\
+\indent Use ``w'', ``s'', ``a'', ``d'' keys to move up, down, left, right. Use ``g'' key to put the bomb.
+
+\section*{Cell}
+\hspace{1.27cm}\textbf{Christmas tree:} Can be destroyed by the bombs; players cannot pass; cannot put the bombs on it. After getting destroyed, becomes Snow Field.
+
+\indent \textbf{Snowman stone:} Cannot be destroyed by the bombs; players cannot pass; cannot put the bombs on it.
+
+\indent \textbf{Snow field:} Cannot be destroyed; walkable; can put the bomb on it. After the bombs explode, becomes Explosion Area.
+
+\indent \textbf{Cell with bomb:} When players are currently on a cell with a bomb, they can still move to another walkable (Snow) field. However, players cannot move onto a cell that already has a bomb.
+
+\section*{Bomb}
+\hspace{1.27cm}\textbf{Time:} Put the bombs on the Snow Field, after 3s they will explode. The explosion lasts for 2s. \\
+\indent \textbf{Range:} The normal bomb range is a symmetric cross field with 9 cells, which has a center and spreads 2 cells in every direction (up, down, left, right). If there is a Christmas Tree, the bomb destroys the Christmas Tree, and the explosion range stops in that direction. If there is a Snowman Stone, the explosion range stops in that direction. \\
+\indent \textbf{Number of Bombs:} At the beginning, each player can put a maximum of 3 bombs, then every 30s, 1 bomb is added.
+
+\section*{Round-Timer}
+\hspace{1.27cm}\textbf{Total time:} 120s.
+
+\section*{How to Play It}
+\hspace{1.27cm} You move around on the layout, put the bombs on the Snow Field, destroy the obstacles (Christmas Tree), and try to kill the opponent. \\
+\indent Avoid yourself to be in the Explosion Area. \\
+\indent Let the opponent be inside Explosion Area to kill it. \\
+\indent You can also be killed by the bombs that you put.
+
+\section*{Game Ending Conditions}
+\hspace{1.27cm}\textbf{Player2 win:} Player1 is in the Explosion Area. \\
+\indent \textbf{Player1 win:} Player2 is in the Explosion Area. \\
+\indent \textbf{Draw:} Player1 and Player2 are in the Explosion Area, or the round-timer is 0. \\
+\indent Press ``q'' to quit directly.
+
+\end{document}
+
