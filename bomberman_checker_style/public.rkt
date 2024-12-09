@@ -11,7 +11,7 @@
 
 (provide (all-defined-out))
 
-; Constant Definitions
+;Constant Definitions
 (define MAX-ROWS 11)
 (define MAX-COLS 15)
 
