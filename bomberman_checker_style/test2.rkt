@@ -223,63 +223,31 @@
                 (render-layout random-layout))))))
 
 ;;----------on_key----------;;
-(define example-layout
-  (vector
+
+(define bomb-list1
+  (list
+  (make-bombstate (make-cor 0 1) 3 'P1)
+  (make-bombstate (make-cor 1 4) 0 'P2)
+  (make-bombstate (make-cor 2 2) 1 'P1)))
+
+(define bomb-list2
+  (list
+  (make-bombstate (make-cor 0 4) 2 'P2)
+  (make-bombstate (make-cor 2 4) 0 'P1)
+  (make-bombstate (make-cor 3 3) 0 'P2)))
+  
+
+
+(define move-predicate?-tests
+  (let (
+        [example-layout
+         (vector
    (vector 'W1D 'W 'W 'W 'I)
    (vector 'W 'I 'E1 'W 'D)
    (vector 'W 'W 'E2 'W 'D)
    (vector 'W 'B 'W 'W 'D)
-   (vector 'W 'W 'W 'W 'W2U)))
-
-(define example-layout1
-  (vector
-   (vector 'W1D 'W 'W 'W 'I)
-   (vector 'B 'I 'E1 'W 'D)
-   (vector 'W 'W 'B 'W 'D)
-   (vector 'W 'E0 'W 'W 'D)
-   (vector 'W 'B 'W 'W 'W2U)))
-
-(define example-layout2
-  (vector
-   (vector 'W1D 'W 'W 'W 'I)
-   (vector 'W 'I 'E1 'W 'D)
-   (vector 'W 'W 'E2 'W 'D)
-   (vector 'W 'I 'W 'B 'D)
-   (vector 'B 'W 'B 'W 'W2U)))
-
-(define bomb-list1
-  (make-bombstate (make-cor 0 1) 3 'P1)
-  (make-bombstate (make-cor 1 4) 0 'P2)
-  (make-bombstate (make-cor 2 2) 1 'P1))
-
-(define bomb-list2
-  (make-bombstate (make-cor 0 4) 2 'P2)
-  (make-bombstate (make-cor 2 4) 0 'P1)
-  (make-bombstate (make-cor 3 3) 0 'P2))
-  
-
-(define gamestate1
-  (make-gamestate
-   example-layout
-   bomb-list1
-   (make-player1 (make-cor 0 4) "L")
-   (make-player2 (make-cor 4 4) "U")
-   120
-   3
-   #f))
-
-(define gamestate1
-  (make-gamestate
-   example-layout
-   bomb-list2
-   (make-player1 (make-cor 0 0) "D")
-   (make-player2 (make-cor 2 3) "U")
-   59
-   5
-   #f)) 
-
-;;
-(define move-predicate?-tests
+   (vector 'W 'W 'W 'W 'W2U))]
+        )
   (test-suite " "
    (test-case "valid, walkable aisle"
               (let ([cor (make-cor 0 2)])
@@ -295,9 +263,18 @@
                 (check-true (move-predicate? example-layout cor) "'E1")))
    (test-case "invalid, non-walkable area 'I"
               (let ([cor (make-cor 4 0)])
-                (check-false (move-predicate? example-layout cor) "'I")))))
+                (check-false (move-predicate? example-layout cor) "'I"))))))
 ;;
 (define 1st-letter-tests
+  (let (
+        [example-layout
+         (vector
+   (vector 'W1D 'W 'W 'W 'I)
+   (vector 'W 'I 'E1 'W 'D)
+   (vector 'W 'W 'E2 'W 'D)
+   (vector 'W 'B 'W 'W 'D)
+   (vector 'W 'W 'W 'W 'W2U))]
+        )
   (test-suite " "
    (test-case "'W1D"
               (let ([coord (make-cor 0 0)])
@@ -313,15 +290,222 @@
                 (check-equal? (1st-letter example-layout coord) "B" " ")))
    (test-case "'I"
               (let ([coord (make-cor 4 0)])
-                (check-equal? (1st-letter example-layout coord) "I" " ")))))
+                (check-equal? (1st-letter example-layout coord) "I" " "))))))
 ;;
 (define put-predicate?-tests
-  (test-suite " "
-    (test-case "valid"
-      (check-true (put-predicate? gamestate1 (make-cor 3 0) 'P1) "Player1 can place a bomb at (3, 0)"))
-    (test-case "valid"
-      (check-true (put-predicate? gamestate2 (make-cor 4 1) 'P2) "Player2 can place a bomb at (4, 1)"))))
-;;
+  (test-suite "put-predicate?-tests"
+    (test-case "P1 can place a bomb"
+      (let* ([example-layout (vector
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'W))]
+            [bomb-list '()]
+            [gamestate (make-gamestate example-layout bomb-list 
+                                       (make-player1 (make-cor 0 0) "D") 
+                                       (make-player2 (make-cor 2 2) "U") 
+                                       60 3 #f)])
+        (check-true (put-predicate? gamestate (make-cor 0 0) 'P1))))
+    (test-case "P2 can place a bomb"
+      (let* ([example-layout (vector
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'W))]
+            [bomb-list '()]
+            [gamestate (make-gamestate example-layout bomb-list 
+                                       (make-player1 (make-cor 0 0) "D") 
+                                       (make-player2 (make-cor 2 2) "U") 
+                                       60 3 #f)])
+        (check-true (put-predicate? gamestate (make-cor 2 2) 'P2))))
+    (test-case "P1 cannot place a bomb (maximum exceeded)"
+      (let* ([example-layout (vector
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'W))]
+            [bomb-list (list (make-bombstate (make-cor 0 0) 3 'P1)
+                             (make-bombstate (make-cor 0 1) 3 'P1)
+                             (make-bombstate (make-cor 0 2) 3 'P1))]
+            [gamestate (make-gamestate example-layout bomb-list 
+                                       (make-player1 (make-cor 0 0) "D") 
+                                       (make-player2 (make-cor 2 2) "U") 
+                                       60 3 #f)])
+        (check-false (put-predicate? gamestate (make-cor 0 0) 'P1))))
+    (test-case "P2 cannot place a bomb (maximum exceeded)"
+      (let* ([example-layout (vector
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'W))]
+            [bomb-list (list (make-bombstate (make-cor 2 0) 3 'P2)
+                             (make-bombstate (make-cor 2 1) 3 'P2)
+                             (make-bombstate (make-cor 2 2) 3 'P2))]
+            [gamestate (make-gamestate example-layout bomb-list 
+                                       (make-player1 (make-cor 0 0) "D") 
+                                       (make-player2 (make-cor 2 2) "U") 
+                                       60 3 #f)])
+        (check-false (put-predicate? gamestate (make-cor 2 2) 'P2))))
+    (test-case "P1 cannot place a bomb (bomb already at position)"
+      (let* ([example-layout (vector
+                              (vector 'B 'W 'W)
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'W))]
+            [bomb-list (list (make-bombstate (make-cor 0 0) 3 'P1))]
+            [gamestate (make-gamestate example-layout bomb-list 
+                                       (make-player1 (make-cor 0 0) "D") 
+                                       (make-player2 (make-cor 2 2) "U") 
+                                       60 3 #f)])
+        (check-false (put-predicate? gamestate (make-cor 0 0) 'P1))))
+    (test-case "P2 cannot place a bomb (bomb already at position)"
+      (let* ([example-layout (vector
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'B))]
+            [bomb-list (list (make-bombstate (make-cor 2 2) 3 'P2))]
+            [gamestate (make-gamestate example-layout bomb-list 
+                                       (make-player1 (make-cor 0 0) "D") 
+                                       (make-player2 (make-cor 2 2) "U") 
+                                       60 3 #f)])
+        (check-false (put-predicate? gamestate (make-cor 2 2) 'P2))))))
+
+
+;;put-bomb
+(define put-bomb-tests
+  (test-suite "put-bomb-tests"
+    (test-case "Layout and bomb-list update correctly"
+      (let* ([example-layout (vector
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'W))]
+            [bomb-list '()]
+            [gamestate (make-gamestate example-layout bomb-list 
+                                       (make-player1 (make-cor 0 0) "D") 
+                                       (make-player2 (make-cor 2 2) "U") 
+                                       60 3 #f)])
+        (let* ([new-gamestate (put-bomb gamestate example-layout (make-cor 0 0) "D" "1")]
+               [new-layout (gamestate-layout new-gamestate)]
+               [new-bomb-list (gamestate-bomb new-gamestate)])
+          (check-equal? (get-symbol new-layout (make-cor 0 0)) 'B1D)
+          (check-equal? (bombstate-cor (first new-bomb-list)) (make-cor 0 0))
+          (check-equal? (bombstate-owner (first new-bomb-list)) 'P1)
+          (check-equal? (bombstate-countdown (first new-bomb-list)) 3))))))
+
+
+(define move-tests
+  (test-suite "move-tests"
+    (test-case "P1 can move"
+      (let* ([example-layout (vector
+                              (vector 'W1D 'W 'W)
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'W))]
+            [gamestate (make-gamestate example-layout '() 
+                                       (make-player1 (make-cor 0 0) "D") 
+                                       (make-player2 (make-cor 2 2) "U") 
+                                       60 3 #f)])
+        (let* ([new-gamestate (move gamestate (make-cor 0 0) 'W1D example-layout "1" "R")]
+               [new-layout (gamestate-layout new-gamestate)])
+          (check-equal? (get-symbol new-layout (make-cor 1 0)) 'W1R)
+          (check-equal? (get-symbol new-layout (make-cor 0 0)) 'W)
+          (check-equal? (player1-cor (gamestate-player1 new-gamestate)) (make-cor 1 0)))))
+    (test-case "P1 cannot move"
+      (let* ([example-layout (vector
+                              (vector 'W1D 'I 'W)
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'W))]
+            [gamestate (make-gamestate example-layout '() 
+                                       (make-player1 (make-cor 0 0) "D") 
+                                       (make-player2 (make-cor 2 2) "U") 
+                                       60 3 #f)])
+        (let* ([new-gamestate (move gamestate (make-cor 0 0) 'W1D example-layout "1" "R")]
+               [new-layout (gamestate-layout new-gamestate)])
+          (check-equal? (get-symbol new-layout (make-cor 0 0)) 'W1R)
+          (check-equal? (get-symbol new-layout (make-cor 1 0)) 'I)
+          (check-equal? (player1-cor (gamestate-player1 new-gamestate)) (make-cor 0 0)))))
+    (test-case "P2 can move"
+      (let* ([example-layout (vector
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'W2U))]
+            [gamestate (make-gamestate example-layout '() 
+                                       (make-player1 (make-cor 0 0) "D") 
+                                       (make-player2 (make-cor 2 2) "U") 
+                                       60 3 #f)])
+        (let* ([new-gamestate (move gamestate (make-cor 2 2) 'W2U example-layout "2" "L")]
+               [new-layout (gamestate-layout new-gamestate)])
+          (check-equal? (get-symbol new-layout (make-cor 1 2)) 'W2L)
+          (check-equal? (get-symbol new-layout (make-cor 2 2)) 'W)
+          (check-equal? (player2-cor (gamestate-player2 new-gamestate)) (make-cor 1 2)))))
+    (test-case "P2 cannot move"
+      (let* ([example-layout (vector
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'W)
+                              (vector 'W 'I 'W2U))]
+            [gamestate (make-gamestate example-layout '() 
+                                       (make-player1 (make-cor 0 0) "D") 
+                                       (make-player2 (make-cor 2 2) "U") 
+                                       60 3 #f)])
+        (let* ([new-gamestate (move gamestate (make-cor 2 2) 'W2U example-layout "2" "L")]
+               [new-layout (gamestate-layout new-gamestate)])
+          (check-equal? (get-symbol new-layout (make-cor 2 2)) 'W2L)
+          (check-equal? (get-symbol new-layout (make-cor 1 2)) 'I)
+          (check-equal? (player2-cor (gamestate-player2 new-gamestate)) (make-cor 2 2)))))))
+
+
+
+;;keyhandler-tests
+(define keyhandler-tests
+  (test-suite "keyhandler-tests"
+    (test-case "Quit game"
+      (let* ([example-layout (vector
+                              (vector 'W1D 'W 'W)
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'W))]
+            [gamestate (make-gamestate example-layout '()
+                                       (make-player1 (make-cor 0 0) "D")
+                                       (make-player2 (make-cor 2 2) "U")
+                                       60 3 #f)])
+        (check-equal? (keyhandler gamestate "q")
+                      (make-gamestate
+                       (gamestate-layout gamestate)
+                       (gamestate-bomb gamestate)
+                       (gamestate-player1 gamestate)
+                       (gamestate-player2 gamestate)
+                       (gamestate-roundtimer gamestate)
+                       (gamestate-maximum gamestate)
+                       #t))))
+    (test-case "P1 places a bomb"
+      (let* ([example-layout (vector
+                              (vector 'W1D 'W 'W)
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'W))]
+            [gamestate (make-gamestate example-layout '()
+                                       (make-player1 (make-cor 0 0) "D")
+                                       (make-player2 (make-cor 2 2) "U")
+                                       60 3 #f)])
+        (check-equal? (keyhandler gamestate " ")
+                      (put-bomb gamestate example-layout (make-cor 0 0) "D" "1"))))
+    (test-case "P2 places a bomb"
+      (let* ([example-layout (vector
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'W)
+                              (vector 'W 'W 'W2U))]
+            [gamestate (make-gamestate example-layout '()
+                                       (make-player1 (make-cor 0 0) "D")
+                                       (make-player2 (make-cor 2 2) "U")
+                                       60 3 #f)])
+        (check-equal? (keyhandler gamestate "g")
+                      (put-bomb gamestate example-layout (make-cor 2 2) "U" "2"))))))
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+;;renew-cor
 (define renew-cor-tests
   (test-suite " "
    (test-case "'D"
@@ -334,6 +518,39 @@
               (check-equal? (renew-cor (make-cor 3 3) "R") (make-cor 4 3) "4 3"))
    (test-case "invalid"
               (check-equal? (renew-cor (make-cor 3 3) "X") (make-cor 3 3) "cor"))))
+
+
+(define test-all
+  (test-suite
+   "All Tests"
+   is-I?-tests
+   is-player1?-tests
+   is-player2?-tests
+   is-fixed-W?-tests
+   is-YU?-tests
+   is-HU?-tests
+   homepage-rule-tests
+   random-layout-rule-tests
+   render-cell-tests
+   seconds->minutes-and-seconds-string-tests
+   render-bar-tests
+   render-layout-tests
+   render-tests
+   move-predicate?-tests
+   1st-letter-tests
+   put-predicate?-tests
+   renew-cor-tests
+   put-bomb-tests
+   move-tests
+   keyhandler-tests))
+
+(run-tests test-all)
+
+  
+
+
+
+
 
 
 
