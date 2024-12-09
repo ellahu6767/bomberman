@@ -1,25 +1,30 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
-#reader(lib "htdp-advanced-reader.ss" "lang")((modname on_key) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
+#reader(lib "htdp-advanced-reader.ss" "lang")((modname |on_key copy|) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
 (require 2htdp/image)
 (require 2htdp/universe)
 (require racket/vector)
 (require racket/system)
 (require racket/base)
+(require racket/string)
 (require "public.rkt")
 (require "render.rkt")
 
+(provide keyhandler)
 
-(provide (all-defined-out))
+(define-struct gamestate [layout bomb player1 player2 roundtimer maximum quit?] #:transparent)
+(define-struct bombstate [cor countdown owner] #:transparent)
+(define-struct cor [column row] #:transparent)
+(define-struct player1 [cor direction] #:transparent)
+(define-struct player2 [cor direction] #:transparent)
 
 ;; move-predicate?: gamestate cor -> Boolean
-
 
 (define (move-predicate? layout new-cor)
   (let (
         [new-symbol (get-symbol layout new-cor)]
         )
-  (and (in-bound? new-cor layout)
+  (and (in-bound? new-cor)
        (or
         (symbol=? new-symbol 'W) ;walkable
         (= (string-length (symbol->string new-symbol)) 2))))) ;'E0, 'E1, 'E2

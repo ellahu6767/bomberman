@@ -6,7 +6,7 @@
 ;layout cor -> boolean
 ;is this cor a walkable cor?
 (define (move-predicate? layout cor)
-  (and (in-bound? cor )
+  (and (in-bound? cor)
        (string-contains? (symbol->string (get-symbol layout cor)) (or "W" "E"))))
   
 ;layout cor bomb-list maximum -> boolean

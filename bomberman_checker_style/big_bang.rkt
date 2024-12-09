@@ -25,5 +25,5 @@
 ))
 
 ;application
-(system "open ~/Desktop/backup/background.mp3")
+;(system "open ~/Desktop/backup/background.mp3")
 (main homepage-state)
