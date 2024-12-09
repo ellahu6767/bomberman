@@ -7,8 +7,7 @@
 (require racket/system)
 (require racket/base)
 (require "public.rkt")
-(require rackunit)
-(require rackunit/text-ui)
+
 
 (provide (all-defined-out))
 
@@ -23,7 +22,7 @@
 ;Row Col -> Boolean
 ;rules for generating 'W1D in random-layout
 (define (is-player1? row col)
-  (= 0 (+ row col)))            
+  (= 0 (+ row col)))
 
 ;Row Col -> Boolean
 ;rules for generating 'W2U in random-layout
@@ -96,7 +95,7 @@
 (define (homepage-rule row col)
   (cond
     [(is-YU? row col) 'D]
-    [(is-HU? row col) 'B]
+    [(is-HU? row col) 'I]
     [else 'W]))
 
 ;row col -> symbol
@@ -132,11 +131,10 @@
        rule-fn)))
 ;;Test---missing---
 
-;homepage vector and random-layout vector
+;homepage and random-layout
 (define homepage (generate-layout 0 '() homepage-rule))
 (define random-layout (generate-layout 0 '() random-layout-rule))
 
-;initial gamestate
 (define initial-state
   (make-gamestate
    random-layout
@@ -147,7 +145,6 @@
    initial-maximum
   #f))
 
-;homepage gamestate
 (define homepage-state
   (make-gamestate
    homepage

@@ -6,6 +6,7 @@
 (require racket/vector)
 (require racket/system)
 (require racket/base)
+(require racket/string)
 (require "public.rkt")
 (require "render.rkt")
 

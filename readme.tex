@@ -140,6 +140,13 @@
 \subsection*{Updated Symbol System and modification in get-symbol function}
 \hspace*{1.27cm}The symbol system was updated to provide a clearer representation of the game state:  
 \begin{itemize}
+  \item Introduce a new data type definition: Who. Use it in on-key part to avoid repeating codes due to the different players. \\
+  Who is one of the following String: 
+   \begin{itemize}
+      \item "1"
+      \item "2"
+    \end{itemize}
+ Interpretation: shortcuts for player. "1" stays for Player1, "2" stays for Player2.
   \item Single-letter symbols represent cells without players. For example:
     \begin{itemize}
       \item 'W: Walkable cell.
