@@ -56,9 +56,8 @@
           [(symbol=? symbol 'E2L) (overlay player2-image-L (bitmap "decorations/Boom.png"))]
           [(symbol=? symbol 'E2R) (overlay player2-image-R (bitmap "decorations/Boom.png"))])))
 
-
 ; render-row:
-(define (render-row layout)
+(define (render-row row)
   (let loop ( ;function name loop
              [i 0] ;start: i=0
              [acc empty-image] ;start: acc=empty-image
@@ -66,11 +65,37 @@
     (if (>= i MAX-COLS)
         acc
         (loop (+ i 1)
-              (beside acc (render-cell (vector-ref layout i)))))))        
+              (beside acc (render-cell (vector-ref row i)))))))
 ;;Test---missing---
+#|(define render-row-tests
+  (test-suite " "
+   (let ([example-layout (vector
+                          (vector 'I 'W1U 'W2L)
+                          (vector 'E1R 'D 'W)
+                          (vector 'I 'B 'B2U))]
+         [MAX-COLS 3])
+     ((test-case " "
+                 (check-equal?
+                  (render-row (vector-ref example-layout 0))
+                  (beside (render-cell 'I) (render-cell 'W1U) (render-cell 'W2L))
+                 "1st row"))
+     (test-case " "
+                (check-equal?
+                 (render-row (vector-ref example-layout 1))
+                 (beside (render-cell 'E1R)
+                         (beside (render-cell 'D) (render-cell 'W)))
+                 "2nd row"))
+     (test-case " "
+                (check-equal?
+                 (render-row (vector-ref example-layout 2))
+                 (beside (render-cell 'I)
+                         (beside (render-cell 'B) (render-cell 'B2U)))
+                 "3rd row"))))))
+
+(run-tests render-row-tests)|#
 
 ; render-layout
-; layout -> Image
+; Layout -> Image
 (define (render-layout layout)
   (let loop (
              [i 0]
@@ -109,7 +134,7 @@
    (text (string-append "Maximum bomb: " (number->string maximum)) 30 "indigo")
    SPACE
    (text (string-append "P2: " (number->string owner2)) 30 "indigo")))
- 
+
 ;homepage-bar     
 (define homepage-bar
    (text "Enter space to start game"
@@ -143,11 +168,7 @@
                             bomb-list))]
         )
     (above (render-bar roundtimer maximum owner1 owner2)
-           (render-layout (gamestate-layout gamestate))))])))
-
-;;Test---missing---
-
-
+           (render-layout (gamestate-layout gamestate))))]))) 
 
 
 

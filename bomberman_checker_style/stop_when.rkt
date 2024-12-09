@@ -134,7 +134,7 @@
 (define (tie gamestate)
   (overlay
    (text "Tie!"
-         70
+         70 
          "RED")
    (render gamestate)))
 
