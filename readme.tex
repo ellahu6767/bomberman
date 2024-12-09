@@ -162,7 +162,7 @@
     \end{itemize}
   \item Two-letter symbols always start with E and represent the explosion effect's countdown timer.
     \begin{itemize}
-      \item Example: 'E2 indicates the explosion effect will last for 2 more ticks.
+      \item Example: 'E1 indicates the explosion effect will last for 2 ticks.
     \end{itemize}
 \end{itemize}
 
@@ -171,24 +171,28 @@
 \subsection*{Optimization of Minor Issues}
 \hspace*{1.27cm}We also addressed several minor issues, including the following:  
 
-1. The implementation logic of the end? function was simplified. Since end? returns a Boolean, there is no need to use `cond` to specify the return value for each case. Instead, we used `or` for a more concise implementation.
+1. The implementation logic of the end? function was simplified. Since end? returns a Boolean, there is no need to use cond to specify the return value for each case. Instead, we used or for a more concise implementation.
 
-2. Improved the usage of let and let*. We ensured that let* is only used when necessary and avoided its use in situations where `let` suffices.
+2. Improved the usage of let and let*. We ensured that let* is only used when necessary and avoided its use in situations where let suffices.
 
-3. After updating the symbol system, we had to use the following code to handle certain logic (e.g., movement logic):  
+3.After multiple optimizations and adding some new helper functions.the keyhandler function's length has been significantly reduced.
+
+4.The generate-row and generate-layout, as well as render-row and render-layout functions, were merged using local.
+
+5. After updating the symbol system, we had to use the following code to handle certain logic (e.g., movement logic):  
 \begin{lstlisting}
 (string->symbol (string-append ...))
 \end{lstlisting}
 
 \indent A better approach would have been to represent the layout as a vector of vectors of strings, thereby avoiding the need to convert between strings and symbols. However, considering that this issue had minimal impact, we ultimately decided not to make this change.
 
-4. Split the previously monolithic file into separate modules:
+6. Split the previously monolithic file into separate modules:
 \begin{itemize}
   \item on-tick
   \item on-key
   \item render
   \item stop-when
-  \item public(containing shared functions like get-symbol, convert, in-bound?, and complete data definitions)
+  \item public(containing data definitions, generating-layout function and its helper function, some constant definitions and some shared functions).
   \item big-bang
 \end{itemize}
 
