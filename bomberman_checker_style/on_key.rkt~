@@ -19,8 +19,6 @@
        (not (string-contains? (symbol->string (get-symbol layout cor)) "W2"));P1 and P2 cannot stay in the same cell
        (or (equal? (1st-letter layout cor) "W") ; aisle is walkable
            (equal? (1st-letter layout cor) "E")))) ; explosion area is also walkable
-
-
   
 ;Gamestate Cor Owner -> Boolean
 ;can this player put this bomb?
@@ -76,7 +74,6 @@
          [can-move? (move-predicate? old-layout new-cor)]
          [new-symbol (if can-move?
                           (string->symbol (string-append (1st-letter old-layout new-cor) who direction))
-                          ;can-move? 2 cells
                           (string->symbol (string-append (1st-letter old-layout old-cor) who direction)))]
          [restore-symbol (string->symbol (1st-letter old-layout old-cor))]
          [new-layout (if can-move?                 
