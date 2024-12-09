@@ -6,6 +6,7 @@
 (require racket/vector)
 (require racket/system)
 (require racket/base)
+(require racket/string)
 (require "render.rkt")
 (require "on_tick.rkt")
 (require "on_key.rkt")
