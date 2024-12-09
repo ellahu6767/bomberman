@@ -37,26 +37,18 @@
 
 ;remove-bomb-test
 (define remove-bomb-tests
-  (test-suite "remove bomb tests"
-              
-    ;; some bombs countdown = 0
+  (test-suite "remove bomb tests"          
     (test-case "remove bombs with countdown = 0"
                (check-equal?
                 (remove-bomb example-bomblist-with-zero-countdown)
                 (list (make-bombstate (make-cor 1 1) 3 'P1)
                       (make-bombstate (make-cor 3 3) 2 'P1))))
-
-    ;; all bombs countdown > 0
     (test-case "no bombs to remove"
                (check-equal?
                 (remove-bomb example-bomblist-without-zero-countdown)
                 example-bomblist-without-zero-countdown))
-
-    ;; no bombs
     (test-case "empty bomb list"
                (check-equal? (remove-bomb '()) '()))
-
-    ;; all bombs countdown = 0
     (test-case "all bombs have countdown = 0"
                (check-equal? (remove-bomb example-bomblist-with-all-zero-countdown) '()))
     ))
@@ -246,7 +238,6 @@
    (vector 'I 'I 'I))]
         )
   (test-suite "single boom range tests"
-    ;; layout-all-W
     (test-case "all W layout: center bomb only"
       (let ([bomb (make-bombstate center-cor 0 'P1)])
         (check-equal? (single-boom-range bomb layout-all-W)
@@ -255,8 +246,6 @@
                             (make-cor 1 2)
                             (make-cor 0 1)
                             (make-cor 2 1))))) 
-
-    ;; layout-in-many-D
     (test-case "many D layout: center bomb only"
       (let ([bomb (make-bombstate center-cor 0 'P1)])
         (check-equal? (single-boom-range bomb layout-in-many-D)
@@ -265,14 +254,10 @@
                             (make-cor 1 2) 
                             (make-cor 0 1)
                             (make-cor 2 1))))) 
-
-    ;; layout-in-many-I
     (test-case "many I layout: center bomb only"
       (let ([bomb (make-bombstate center-cor 0 'P1)])
         (check-equal? (single-boom-range bomb layout-in-many-I)
                       (list (make-cor 1 1))))) 
-
-    ;; layout-in-mix-D-I
     (test-case "mix D and I layout: center bomb only"
       (let ([bomb (make-bombstate center-cor 0 'P1)])
         (check-equal? (single-boom-range bomb layout-in-mix-D-I)
