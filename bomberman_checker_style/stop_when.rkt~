@@ -16,27 +16,28 @@
 ;quit-image
 (define quit-image
   (overlay
-   (text "Thanks for playing!"
-         70
-         "red")
-   (rectangle (* CELL-SIZE MAX-COLS)
-              (* CELL-SIZE MAX-ROWS)
-              "solid"
-              "black")))
+  (text "Thanks for playing!"
+        70
+        "red")
+  (rectangle (* CELL-SIZE MAX-COLS)
+             (* CELL-SIZE MAX-ROWS)
+             "solid"
+             "black")))
 
-;end?:
 
-;Input/Output:
-;GameState -> Boolean
+; end?:
+
+; input/output:
+; gamestate -> Boolean
 ;
-;Purpose Statement:
-;Determines whether the game should end based on the current GameState.
-;The game ends if any of the following conditions are met:
-;--The player has chosen to quit the game (gamestate-quit? GameState) returns #t)
-;--The RoundTimer reaches 0 
-;--Both Players have died 
-;--Player 1 has died 
-;--Player 2 has died
+; purpose statement:
+; determines whether the game should end based on the current gamestate.
+; the game ends if any of the following conditions are met:
+; --the player has chosen to quit game (gamestate-quit? gamestate) returns #t)
+; --the roundtimer reaches 0 
+; --both players have died 
+; --player 1 has died 
+; --player 2 has died
 
 (define (end? gamestate)
   (if (gamestate-quit? gamestate)
@@ -63,15 +64,15 @@
 
 ;final:
 
-;Input/Output:
-;GameState -> Image
+;input/output:
+;gamestate-> Image
 
-;Purpose Statement:
-;Determines the final Image to display based on the GameState at the end of the game.
-; - If the player has chosen to quit, returns quit-image.
-; - If both Players have died or RoundTimer has finished, returns (tie GameState).
-; - If only Player 1 has died, returns (player2-win GameState).
-; - If only Player 2 has died, returns (player1-win GameState).
+;purpose statement:
+;determines the final image to display based on the gamestate at the end of the game
+; - if the player has chosen to quit, returns quit-image
+; - if both players have died or roundtimer has finished, returns (tie gamestate)
+; - if only Player 1 has died ,returns (player2-win gamestate)
+; - if only Player 2 has died ,returns (player1-win gamestate)
 (define (final gamestate)
   (if (gamestate-quit? gamestate)
       quit-image
@@ -95,13 +96,13 @@
 
 ;auxiliary functions:
 
-;player2-win Image:
+;player2-win image:
 
-;Input/Output:
-;GameState -> Image
+;input/output:
+;gamestate -> Image
 
-;Purpose Statement:
-;Return the Player2-Win Image.
+;purpose statement:
+;return the player2-win Image
 (define (player2-win gamestate)
   (overlay
    (text "PLAYER2-WIN!"
@@ -109,13 +110,13 @@
          "RED")
    (render gamestate)))
 
-;player1-win Image:
+;player1-win image:
 
-;Input/Output:
-;GameState -> Image
+;input/output:
+;gamestate -> Image
 
-;Purpose Statement:
-;Return the Player1-Win Image.
+;purpose statement:
+;return the player1-win Image
 (define (player1-win gamestate)
   (overlay
    (text "PLAYER1-WIN!"
@@ -124,13 +125,13 @@
    (render gamestate)))
 
 
-;tie Image:
+;tie image:
 
-;Input/Output:
-;GameState -> Image
+;input/output:
+;gamestate -> Image
 
-;Purpose Statement:
-;Return the Tie Image.
+;purpose statement:
+;return the tie Image
 (define (tie gamestate)
   (overlay
    (text "You Can Get Married!"
@@ -140,13 +141,13 @@
 
 ;check-player1-died?:
 
-;Input/Output:
-;Symbol -> Boolean
+;input/output
+;symbol -> Boolean
 
-;Purpose Statement:
-;Determines whether Player1 has died based on the given Symbol.
-;Returns #t if the Symbol shows that Player1 is in an explosion.
-;Returns #f otherwise.
+;purpose statement:
+;determines whether player1 has died based on the given symbol
+;returns #t if the symbol shows that player1 is in an explosion 
+;returns #f otherwise
 (define (check-player1-died? symbol)
   (or
    (symbol=? symbol 'E1L)
@@ -157,13 +158,13 @@
 
 ;check-player2-died?:
 
-;Input/Output:
-;Symbol -> Boolean
+;input/output
+;symbol -> Boolean
 
-;Purpose Statement:
-;Determines whether Player2 has died based on the given Symbol.
-;Returns #t if the Symbol shows that Player2 is in an explosion.
-;Returns #f otherwise.
+;purpose statement:
+;determines whether player2 has died based on the given symbol
+;returns #t if the symbol shows that player2 is in an explosion 
+;returns #f otherwise
 (define (check-player2-died? symbol)
   (or
    (symbol=? symbol 'E2L)
@@ -173,16 +174,15 @@
 
 ;check-all-died?:
 
-;Input/Output:
-;Symbol Symbol -> Boolean
+;input/output
+;symbol1 symbol2 -> Boolean
 
-;Purpose Statement:
-;Determines whether Player1 and Player2 have died together.
-;Returns #t if the Symbol shows that Player1 and Player2 are all in the explosion.
-;Returns #f otherwise.
+;purpose statement:
+;determines whether player1 and player2 has died together
+;returns #t if the symbol shows that player1 and player2 are all in the explosion
+;returns #f otherwise.
 
 (define (check-all-died? symbol1 symbol2)
-  (and (check-player1-died? symbol1) ;Player1 died
-       (check-player2-died? symbol2))) ;Player2 died
-
+  (and (check-player1-died? symbol1)
+       (check-player2-died? symbol2)))
   

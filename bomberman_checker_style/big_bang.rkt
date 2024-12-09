@@ -19,7 +19,7 @@
   (big-bang gamestate
     [to-draw render]
     [on-key keyhandler]
-    [on-tick timehandler 0.5]
+    [on-tick timehandler 1]
     [stop-when end?
                final]
 ))

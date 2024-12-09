@@ -13,37 +13,35 @@
 
 ;check-I?:
 
-;input/output:
-;cor layout -> Boolean
+;Input/Output:
+;Cor Layout -> Boolean
 
-;purpose statement:
-;check if the symbol of the given cor in the given layout is 'I
-;if it is,returns #t
-;otherwise, returns #f
+;Purpose Statement:
+;Check if the Symbol of the given Cor in the given Layout is 'I.
+;If it is, returns #t; otherwise, returns #f.
 (define (check-I? layout cor)
   (eq? (get-symbol layout cor) 'I))
 
 ;check-D?:
 
-;input/output:
-;cor layout -> Boolean
+;Input/Output:
+;Cor Layout -> Boolean
 
-;purpose statement:
-;check if the symbol of the given cor in the given layout is 'D
-;if it is,returns #t
-;otherwise, returns #f
+;Purpose Statement:
+;Check if the Symbol of the given Cor in the given Layout is 'D.
+;If it is, returns #t; otherwise, returns #f.
 (define (check-D? layout cor)
   (eq? (get-symbol layout cor) 'D))
 
 
 ;single-boom-range:
 
-;input/output:
-;bombstate layout -> list<Cor>
+;Input/Output:
+;BombState Layout -> List<Cor>
 
-;purpose statement:
-;calculate the boom-range of the given single bombstate
-;call extend-direction function to calculate the boom-range of each direction
+;Purpose Statement:
+;Call extend-direction function to calculate the Real boom-range of each direction.
+;Return the Real boom-range of a single BombState.
 (define (single-boom-range bombstate layout)
   (let* (
         [center (bombstate-cor bombstate)]
@@ -73,26 +71,22 @@
         )
     (cons center
           (apply append boom-range-except-center))))
-       ;;use apply append to convert the (list (list<Cor)(list<Cor)(list<Cor)(list<Cor))
-       ;;to a single list<Cor>
-
 
 
 ;extend-direction:
 
-;date types:
-;potential-list is a list<Cor>
-;represents the max-boom-range in each direction
+;Data Types:
+;potential-list is a List<Cor>
+;Represents the max-boom-range in each direction
 
-;input/output:
-;potential-list layout -> list<Cor>
+;Input/Output:
+;List<Cor> Layout -> List<Cor>
 
-;purpose statement:
-;extend the explosion range in each direction
-;the extending rule is:
-;when meet first 'D , add the Cor of 'D to the output list<Cor> but
-;in this direction
-;when meet first 'I , directly stop extending in this direction.
+;Purpose Statement:
+;Extend the explosion range in each direction
+;The extending rule is:
+;When meeting the first 'D in any direction, stop extending in this direction but add Cor of 'D to the result
+;When meeting the first 'I in any direction, directly stop extending in this direction and return the result
 (define (extend-direction potential-list layout)
   (cond
     [(or
@@ -109,13 +103,14 @@
      (cons (first potential-list)
            (extend-direction (rest potential-list) layout))]))
 
+
 ;boom-range:
 
-;input/output:
-;list<Bombstate> layout -> list<Cor>
+;Input/Output:
+;List<BombState> Layout -> List<Cor>
 
-;purpose statement:
-;calculate the boom-range of a list<Bombstate>
+;Purpose Statement:
+;Calculate the boom-range of a List<BombState>
 (define (boom-range bomb-list layout)
   (apply append
          (map
@@ -123,18 +118,18 @@
                 (single-boom-range bombstate layout))
               bomb-list)))
 
+
 ;boom:
 
-;input/output:
-;gamestate -> gamestate
+;Input/Output:
+;GameState -> GameState
 
-;purpose statement:
-;filter the count-down=0 List<Bomb>, calculate the exploding range,
-;by chain effect calculate the new exploding range(bomb1 -> bomb2 -> bomb3),
-;put the total exploding cors into accumulator,
-;update the layout according to exploding cors,
-;update the players state(dead?)
-
+;Purpose Statement:
+;Filter the Countdown=0 List<BombState>
+;Calculate the boom-range
+;Handle the Chain-Explosion
+;To get the final boom-range
+;When finishing handling all the exploding bombs, return the GameState with updated List<BombState> and updated Layout
 (define (boom gamestate)
   (let* (
          [bomb-list (gamestate-bomb gamestate)]
@@ -151,50 +146,44 @@
                [accumulated-boom-cor '()] 
                )
       (let* (
-             [exploding-list ;the bombs those count-down = 0 AND not in the processed-bombs list
+             [exploding-list ;The bombs whose Countdown=0 and not in the processed-bombs list
               (filter
                (lambda (bombstate)
-                 (and (= (bombstate-countdown bombstate) 0) ;
+                 (and (= (bombstate-countdown bombstate) 0)
                       (not (in-boom-cor? (bombstate-cor bombstate) processed-bombs))))
                current-bomb-list)] 
-             [boom-cor (boom-range exploding-list current-layout)] ;the list of cors of bombs in exploding list on the current layout
-             [updated-bomb-list (chain-explosion boom-cor current-bomb-list)] ;updated List<Bomb> under chain explosion effect
-             [new-processed-bombs (append processed-bombs (map bombstate-cor exploding-list))] ;extract the cors from the bombs in exploding list
-             ; thus the processed-bombs should be a list of cors
+             [boom-cor (boom-range exploding-list current-layout)] ;Calculate the boom-range of exploding bombs
+             [updated-bomb-list (chain-explosion boom-cor current-bomb-list)] ;Handle chain-explosion
+                          [new-processed-bombs (append processed-bombs (map bombstate-cor exploding-list))] ;Calculating new processed bombs
              [new-layout
               (cond
                 [(and
                   (in-boom-cor? player1-cor boom-cor)
                   (in-boom-cor? player2-cor boom-cor))
                   
-                  (convert ;;kill player2 ;convert1
-                   (convert ;;kill player1 ;convert2
-                    (convert current-layout boom-cor 'E2) ;;change boom-range to 'E2 ;convert3 ;layout for convert2
-                   player1-cor ;cor for convert2
+                  (convert ;;Kill player2
+                   (convert ;;Kill player1
+                    (convert current-layout boom-cor 'E1) ;;Change boom-range to 'E1
+                   player1-cor 
                    (string->symbol (string-append "E" "1" player1-direction)))
-                   ;convert2 the cor which has player1 into symbol 'E1direction ;symbol for convert2; layout for convert3
-                  
-                  player2-cor ;cor for convert3
+                  player2-cor ;Cor for convert3
                   (string->symbol (string-append "E" "2" player2-direction)))]
-                ;convert3 the cor which has player2 into symbol 'E2direction 
-
+               
                 [(in-boom-cor? player1-cor boom-cor)
-                 
-                 (convert ;;kill player1
-                  (convert current-layout boom-cor 'E2) ;;change boom-range to 'E2
+                 (convert ;;Kill player1
+                  (convert current-layout boom-cor 'E1) ;;Change boom-range to 'E1
                   player1-cor (string->symbol (string-append "E" "1" player1-direction)))]
                 
                 [(in-boom-cor? player2-cor boom-cor)
-                 
-                 (convert ;;kill player2
-                  (convert current-layout boom-cor 'E2) ;;change boom-range to 'E2
-                 player2-cor (string->symbol (string-append "E" "2" player2-direction)))]
+                 (convert ;;Kill player2
+                  (convert current-layout boom-cor 'E1) ;;Change boom-range to 'E1
+                  player2-cor (string->symbol (string-append "E" "2" player2-direction)))]
 
-                [else (convert current-layout boom-cor 'E2)])] ;;change boom-range to 'E2
+                [else (convert current-layout boom-cor 'E1)])] ;;Only change boom-range to 'E1
              
-             [new-accumulated-boom-cor (append accumulated-boom-cor boom-cor)] ;start: '()+list of cors          
+             [new-accumulated-boom-cor (append accumulated-boom-cor boom-cor)]           
              )
-        (if (empty? exploding-list) ;no bombs count down is 0, or they are all in processed-bomb-list      
+        (if (empty? exploding-list) ;No bombs Countdown=0, or all are in processed-bomb list      
              (make-gamestate
               new-layout
               updated-bomb-list
@@ -209,21 +198,19 @@
                   new-accumulated-boom-cor))))))
 
 
-
-
 ;chain-explosion:
 
-;input/output:
-;list<Cor> list<Bombstate> -> list<Bombstate>
+;Input/Output:
+;List<Cor> List<BombState> -> List<BombState>
 
-;purpose statement:
-;handle the chain-explosion,the rule is:
-;if a bomb's Cor matches any Cor in the initial-boom-cor (a list<Cor>)
+;Purpose Statement:
+;Handle the Chain-Explosion. The rule is:
+;If a bomb's Cor matches any Cor in the Initial-Boom-Cor (a List<Cor>)
 ;and its countdown is not 0
 ;this bomb's countdown will be set to 0
-;otherwise,the bomb will be unchanged
-;in final, returns the updated list<Bombstate> after applying the rule to all
-;the element in the given bomb-list
+;Otherwise, the bomb will be unchanged
+;Finally, returns the updated List<BombState> after applying the rule to all
+;the elements in the given list<Bombstate>
 (define (chain-explosion initial-boom-cor bomb-list)
     (map
      (lambda (bombstate)
@@ -237,16 +224,16 @@
              
                 bombstate))
               bomb-list))
-     
+
 
 ;cor=?:
 
-;input/output:
+;Input/Output:
 ;Cor Cor -> Boolean
 
-;purpose statement:
-;returns #t if the given two cors has both the same column and row
-;otherwise returns #f
+;Purpose Statement:
+;Returns #t if the given two Cors have both the same column and row
+;Otherwise, returns #f
 (define (cor=? cor1 cor2)
   (and (= (cor-column cor1) (cor-column cor2))
        (= (cor-row cor1) (cor-row cor2))))
@@ -254,12 +241,12 @@
 
 ;in-boom-cor?:
 
-;input/output:
-;Cor list<Cor> -> Boolean
+;Input/Output:
+;Cor List<Cor> -> Boolean
 
-;purpose statement:
-;returns #t if the given cor is in the given list<Cor>
-;otherwise returns #f
+;Purpose Statement:
+;Returns #t if the given Cor is in the given List<Cor>
+;Otherwise, returns #f
 (define (in-boom-cor? cor cor-list)
   (cond
     [(empty? cor-list) #f]
@@ -268,44 +255,59 @@
       (cor=? cor (first cor-list))
       #t
       (in-boom-cor? cor (rest cor-list)))]))
-  
 
-      
+
 ;remove-bomb:
 
-;input/output:
-;list<bombstate> -> list<bombstate>
+;Input/Output:
+;List<BombState> -> List<BombState>
 
-;purpose statement:
-;remove the bombstate which countdown is 0 in the giveb bomb-list
-
+;Purpose Statement:
+;Remove the BombState which countdown is 0 in the given List<Bombstate>
 (define (remove-bomb bomb-list)
   (filter (lambda (bomb)
             (> (bombstate-countdown bomb) 0)) bomb-list))
 
 
+;updated-bomb:
+
+;Input/Output:
+;List<BombState> -> List<BombState>
+
+;Purpose Statement:
+;Updates the countdown of each BombState in the list<Bombstate> (sub1 in each tick)
+;But the countdown cannot go below 0
+
+(define (updated-bomb bomb-list)
+  (map (lambda (bombstate)
+         (make-bombstate
+          (bombstate-cor bombstate)
+          (max 0 (sub1 (bombstate-countdown bombstate)))
+          (bombstate-owner bombstate)))
+       bomb-list))
+
+
+
 ;updated-roundtimer:
 
-;input/output:
+;Input/Output:
 ;Number -> Number
 
-;purpose statement:
-;decreases the roundtimer by 1 in each tick,
-;but the roundtimer doesn't go below 0
-
+;Purpose Statement:
+;Decreases the RoundTimer by 1 in each tick,
+;but the RoundTimer doesn't go below 0
 (define (updated-roundtimer roundtimer)
   (max 0 (sub1 roundtimer))) 
 
 
 ;check-roundtimer?:
 
-;input/output:
+;Input/Output:
 ;Number -> Boolean
 
-;purpose statement:
-;returns #t if the roundtimer is divisible by 30 (except 120 or 0)
-;otherwise returns #f
-
+;Purpose Statement:
+;Returns #t if the RoundTimer is divisible by 30 (except 120 or 0)
+;Otherwise, returns #f
 (define (check-roundtimer? roundtimer)
   (and
    (not (= roundtimer 120))
@@ -315,86 +317,72 @@
 
 ;add-maximum:
 
-;input/output:
+;Input/Output:
 ;Number -> Number
 
-;purpose statement:
-;increases the given maximum value by 1
-;but maximum cannot exceed 6
-
+;Purpose Statement:
+;Increases the given Maximum value by 1
+;but Maximum cannot exceed 6
 (define (add-maximum maximum)
   (min 6 (add1 maximum)))
 
-
-;updated-bomb:
-;input/output:
-;list<bombstate> -> list<bombstate>
-
-;purpose statement:
-;updates the countdown of each bombstate in the bomb-list (sub1 in each tick)
-;but the countdown cannot go below 0
-
-(define (updated-bomb bomb)
-  (map (lambda (bombstate)
-         (make-bombstate
-          (bombstate-cor bombstate)
-          (max 0 (sub1 (bombstate-countdown bombstate)))
-          (bombstate-owner bombstate)))
-       bomb))
-
-
-;check-zero?:
-;input/output:
-;list<bombstate> -> Boolean
-
-;purpose statement:
-;returns #t if there is any bombstate in the bomb-list has countdown equal to 0
-;otherwise returns #f
-
-(define (check-zero? bomb-list)
-  (cond
-    [(empty? bomb-list) #f]
-    [else
-     (if
-     (= (bombstate-countdown (first bomb-list)) 0)
-     #t
-     (check-zero? (rest bomb-list)))]))
-
-
 ;update-E-symbols:
 
-;input/output:
-;symbol -> symbol
+;Input/Output:
+;Symbol -> Symbol
 
-;purpose statement:
-;change the symbol in sequence 'E2->'E1->'E0->'W in each tick
+;Purpose Statement:
+;Change the Symbol in sequence 'E1 -> 'E0 -> 'W in each tick
 (define (update-E-symbols symbol)
   (cond
-    [(equal? symbol 'E2) 'E1]
     [(equal? symbol 'E1) 'E0]
     [(equal? symbol 'E0) 'W]
     [else symbol]))
 
 ;updated-layout:
 
-;input/output:
-;layout -> layout
+;Input/Output:
+;Layout -> Layout
 
-;purpose statement:
-;updates the layout by applying the update-E-symbols function to every symbol
-;in the layout
+;Purpose Statement:
+;Updates the Layout by applying the update-E-symbols function to every Symbol in the Layout
 (define (updated-layout layout)
   (vector-map
    (lambda (row)
-           (vector-map update-E-symbols row)) 
-   layout)) 
+     (vector-map update-E-symbols row)) 
+   layout))
+
+
+;check-zero?:
+
+;Input/Output:
+;List<BombState> -> Boolean
+
+;Purpose Statement:
+;Returns #t if there is any BombState in the List<Bombstate> that has countdown equal to 0
+;Otherwise, returns #f
+(define (check-zero? bomb-list)
+  (cond
+    [(empty? bomb-list) #f] ;
+    [else
+     (if (= (bombstate-countdown (first bomb-list)) 0)
+         #t
+         (check-zero? (rest bomb-list)))])) 
+
+
+
 
 ;timehandler:
 
-;input/output
-;gamestate -> gamestate
+;Input/Output
+;GameState -> GameState
 
-;purpose statement:
+;Purpose Statement:
+;Update Layout ('E1->'E1->'E0->'W)
+;Update the RoundTimer and Maximum, and countdown for all BombState
+;When there is any bomb that should boom, call the boom function
+;to handle explosions
+;After handling explosions, remove exploded bombs
 
 (define (timehandler gamestate)
   (let (
@@ -404,41 +392,41 @@
       [(equal? layout homepage)
        gamestate]
       [else
-       
-  (let*
-      (
-       [updated-gamestate
-        (make-gamestate  (updated-layout (gamestate-layout gamestate))
-                         (updated-bomb (gamestate-bomb gamestate))
-                         (gamestate-player1 gamestate)
-                         (gamestate-player2 gamestate)
-                         (updated-roundtimer (gamestate-roundtimer gamestate))
-                         (if (check-roundtimer? (gamestate-roundtimer gamestate))
-                                                (add-maximum (gamestate-maximum gamestate))
-                                                (gamestate-maximum gamestate))
-                         (gamestate-quit? gamestate))]
-     
-       
-       ;;update game state (update timer for roundtimer and bomb-countwdown)
+       (let*
+           (
+            [updated-gamestate
+             (make-gamestate  
+              (updated-layout (gamestate-layout gamestate)) ;'E1->'E0->'W
+              (updated-bomb (gamestate-bomb gamestate)) ;Decrease the countdown of each BombState
+              (gamestate-player1 gamestate)
+              (gamestate-player2 gamestate)
+              (updated-roundtimer (gamestate-roundtimer gamestate))
+              (if (check-roundtimer? (gamestate-roundtimer gamestate))
+                  (add-maximum (gamestate-maximum gamestate))
+                  (gamestate-maximum gamestate)) ;Check if Maximum should be added
+              (gamestate-quit? gamestate))]
 
-       ;;handle countdown-zero bomb
-       [boom-gamestate
-        (if (check-zero? (gamestate-bomb updated-gamestate))
-            (boom updated-gamestate)
-            updated-gamestate)]
+            ;;Handle countdown=0 bombs
+            [boom-gamestate
+             (if (check-zero? (gamestate-bomb updated-gamestate))
+                 (boom updated-gamestate)
+                 updated-gamestate)]
 
-       ;;remove countdown=0 bomb
-       [updated-bomb-list (gamestate-bomb boom-gamestate)]
-       [final-bomb-list
-        (remove-bomb updated-bomb-list)]
-       [new-gamestate
-        (make-gamestate
-         (gamestate-layout boom-gamestate)
-         final-bomb-list
-         (gamestate-player1 boom-gamestate)
-         (gamestate-player2 boom-gamestate)
-         (gamestate-roundtimer boom-gamestate)
-         (gamestate-maximum boom-gamestate)
-         (gamestate-quit? boom-gamestate))]
-       )
-    new-gamestate)])))
+            ;;Remove processed countdown=0 bombs
+            [updated-bomb-list (gamestate-bomb boom-gamestate)]
+            [final-bomb-list
+             (remove-bomb updated-bomb-list)]
+
+            [new-gamestate
+             (make-gamestate
+              (gamestate-layout boom-gamestate)
+              final-bomb-list
+              (gamestate-player1 boom-gamestate)
+              (gamestate-player2 boom-gamestate)
+              (gamestate-roundtimer boom-gamestate)
+              (gamestate-maximum boom-gamestate)
+              (gamestate-quit? boom-gamestate))]
+           )
+         new-gamestate)])))
+
+

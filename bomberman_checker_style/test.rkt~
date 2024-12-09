@@ -122,7 +122,9 @@
 
 ;; Updated E-Symbol Tests
 (define updated-E-symbol-tests
-  (test-suite "update E symbol tests"
+  (test-suite "Update E Symbol Tests"
+    (test-case "E2 to E1"
+      (check-equal? (update-E-symbols 'E2) 'E1))
     (test-case "E1 to E0"
       (check-equal? (update-E-symbols 'E1) 'E0))
     (test-case "E0 to W"
@@ -132,7 +134,23 @@
 
 ;; Updated Layout Tests
 (define updated-layout-tests
-  (test-suite "updated layout tests"   
+  (test-suite "Updated Layout Tests"
+              
+    (test-case "E2 to E1 layout"
+               (let (
+                     [layout-many-E2
+                      (vector
+                       (vector 'E2 'E2 'E2)
+                       (vector 'E2 'E2 'E2)
+                       (vector 'E2 'E2 'W))]
+                     [layout-many-E1
+                      (vector
+                       (vector 'E1 'E1 'E1)
+                       (vector 'E1 'E1 'E1)
+                       (vector 'E1 'E1 'W))]
+                     )      
+      (check-equal? (updated-layout layout-many-E2) layout-many-E1)))
+    
     (test-case "E1 to E0 layout"
                (let (
                      [layout-many-E1
@@ -162,7 +180,7 @@
                        (vector 'W 'W 'W))]
                      )          
       (check-equal? (updated-layout layout-many-E0) layout-all-W)))
-    (test-case "no E, no change"
+    (test-case "No E, No change"
                (let (
                      [layout-all-W
                       (vector
@@ -255,7 +273,7 @@
                             (make-cor 1 0)
                             (make-cor 1 2)
                             (make-cor 0 1)
-                            (make-cor 2 1))))) 
+                            (make-cor 2 1))))) ; center bomb
 
     ;; layout-in-many-D
     (test-case "many D layout: center bomb only"
@@ -265,13 +283,13 @@
                             (make-cor 1 0)
                             (make-cor 1 2) 
                             (make-cor 0 1)
-                            (make-cor 2 1))))) 
+                            (make-cor 2 1))))) ; center bomb
 
     ;; layout-in-many-I
     (test-case "many I layout: center bomb only"
       (let ([bomb (make-bombstate center-cor 0 'P1)])
         (check-equal? (single-boom-range bomb layout-in-many-I)
-                      (list (make-cor 1 1))))) 
+                      (list (make-cor 1 1))))) ; center bomb only, blocked by 'I
 
     ;; layout-in-mix-D-I
     (test-case "mix D and I layout: center bomb only"
@@ -279,7 +297,7 @@
         (check-equal? (single-boom-range bomb layout-in-mix-D-I)
                       (list (make-cor 1 1)
                             (make-cor 1 0) 
-                            (make-cor 0 1)))))))) 
+                            (make-cor 0 1)))))))) ; center bomb, blocked by 'I
   
 
 
@@ -307,7 +325,7 @@
    (vector 'D 'W 'I)
    (vector 'I 'I 'I))]
         )
-  (test-suite "boom range tests"
+  (test-suite "boom Range tests"
     ;; layout-all-W
     (test-case "all W layout: center and southwest corner bombs"
       (let (
@@ -421,14 +439,14 @@
 
 ;; cor=? Tests
 (define cor=?-tests
-  (test-suite "cor=? tests"
-    (test-case "equal coordinates"
+  (test-suite "cor=? Tests"
+    (test-case "Equal coordinates"
       (check-true (cor=? (make-cor 1 1) (make-cor 1 1))))
-    (test-case "different column"
+    (test-case "Different column"
       (check-false (cor=? (make-cor 1 1) (make-cor 1 2))))
-    (test-case "different row"
+    (test-case "Different row"
       (check-false (cor=? (make-cor 1 1) (make-cor 2 1))))
-    (test-case "completely different"
+    (test-case "Completely different"
       (check-false (cor=? (make-cor 1 1) (make-cor 2 2))))))
 
 ;; in-boom-cor? Tests
@@ -436,7 +454,7 @@
   (let (
         [cor-list (list (make-cor 1 1) (make-cor 1 2) (make-cor 1 0))]
         )
-    (test-suite "in-boom-cor? tests"
+    (test-suite "in-boom-cor? Tests"
       (test-case "in list: first element"
         (check-true (in-boom-cor? (make-cor 1 1) cor-list)))
       (test-case "in list: second element"
@@ -455,7 +473,7 @@
         [layout-mix-symbol
          (vector
           (vector 'W 'W1U 'I)
-          (vector 'D 'B 'E1)
+          (vector 'D 'B 'E2)
           (vector 'E1 'B2L 'E2U))]
         )
   (test-suite "get-symbol Tests"
@@ -478,7 +496,7 @@
    (vector 'I 'W 'I)
    (vector 'I 'I 'W))]
        )
-  (test-suite "check-I? tests"
+  (test-suite "check-I? Tests"
     (test-case "valid I position"
       (check-true (check-I? layout-many-I (make-cor 0 0))))
     (test-case "valid I position"
@@ -497,7 +515,7 @@
    (vector 'D 'W 'D)
    (vector 'D 'D 'W))]
        ) 
-  (test-suite "check-D? tests"
+  (test-suite "check-D? Tests"
     (test-case "valid D position"
       (check-true (check-D? layout-many-D (make-cor 0 1))))
     (test-case "valid D position"
@@ -516,20 +534,21 @@
    (vector 'W 'W 'W)
    (vector 'W 'W 'W))]
         )
-  (test-suite "convert tests"
-    (test-case "convert some positions to E1"
+  (test-suite "convert Tests"
+    (test-case "convert some positions to E2"
       (let ([converted-layout
-             (convert layout-all-W (list (make-cor 1 1) (make-cor 0 0)) 'E1)])
-        (check-equal? (get-symbol converted-layout (make-cor 1 1)) 'E1)
-        (check-equal? (get-symbol converted-layout (make-cor 0 0)) 'E1)
+             (convert layout-all-W (list (make-cor 1 1) (make-cor 0 0)) 'E2)])
+        (check-equal? (get-symbol converted-layout (make-cor 1 1)) 'E2)
+        (check-equal? (get-symbol converted-layout (make-cor 0 0)) 'E2)
         (check-equal? (get-symbol converted-layout (make-cor 2 2)) 'W))))))
 
 ;;boom
 ;;since boom-range has tested in single-boom-range and boom-range tests
 ;;so in boom function, use layout-all-W as layout(define boom-tests
 (define boom-tests
-  (test-suite "boom function tests"
-    (test-case "no bombs: players and layout remain unchanged"
+  (test-suite "Boom Function Tests"
+    ;; Test 1: No bombs, players exist but unaffected
+    (test-case "No bombs: Players and layout remain unchanged"
       (let* (
              [layout-all-W
               (vector
@@ -545,7 +564,9 @@
         (check-equal? (gamestate-layout result) layout-all-W)
         (check-equal? (gamestate-player1 result) player1)
         (check-equal? (gamestate-player2 result) player2)))
-    (test-case "single bomb, players out of range"
+
+    ;; Test 2: Single bomb, players out of range
+    (test-case "Single bomb, players out of range: Layout updates correctly"
       (let* (
              [layout-all-W
               (vector
@@ -561,11 +582,13 @@
                                                             (make-cor 0 1) 
                                                             (make-cor 2 1) 
                                                             (make-cor 1 0) 
-                                                            (make-cor 1 2)) 'E1)])
+                                                            (make-cor 1 2)) 'E2)])
         (check-equal? (gamestate-layout result) expected-layout)
         (check-equal? (gamestate-player1 result) player1)
         (check-equal? (gamestate-player2 result) player2)))
-    (test-case "single bomb with player1 in range"
+
+    ;; Test 3: Single bomb with player1 in range
+    (test-case "Single bomb with player1 in range"
       (let* (
              [layout-all-W
               (vector
@@ -581,13 +604,15 @@
                                                 (list (make-cor 0 1) 
                                                       (make-cor 2 1) 
                                                       (make-cor 1 0) 
-                                                      (make-cor 1 2)) 'E1)
+                                                      (make-cor 1 2)) 'E2)
                                        (make-cor 1 1) 'E1U)])
         (check-equal? (gamestate-layout result) expected-layout)
         (check-equal? (gamestate-player1 result)
                       (make-player1 (make-cor 1 1) "U"))
         (check-equal? (gamestate-player2 result) player2)))
-    (test-case "both players in explosion range"
+
+    ;; Test 4: Both players in explosion range
+    (test-case "Both players in explosion range"
       (let* (
              [layout-all-W
               (vector
@@ -602,15 +627,17 @@
              [expected-layout (convert (convert (convert layout-all-W
                                                          (list (make-cor 0 1)
                                                                (make-cor 2 1)
-                                                               (make-cor 1 0)) 'E1)
+                                                               (make-cor 1 0)) 'E2)
                                                 (make-cor 1 1) 'E1U)
-                                       (make-cor 1 2) 'E1L)])
+                                       (make-cor 1 2) 'E2L)])
         (check-equal? (gamestate-layout result) expected-layout)
         (check-equal? (gamestate-player1 result)
                       (make-player1 (make-cor 1 1) "U"))
         (check-equal? (gamestate-player2 result)
                       (make-player2 (make-cor 1 2) "L"))))
-    (test-case "bombs with chain explosion, no players affected"
+
+    ;; Test 5: Multiple bombs, chain reaction, players unaffected
+    (test-case "Multiple bombs with chain reaction, no players affected"
       (let* (
              [layout-all-W
               (vector
@@ -628,12 +655,15 @@
                                                       (make-cor 0 1)
                                                       (make-cor 2 1)
                                                       (make-cor 1 0)
-                                                      (make-cor 1 2)) 'E1)
-                                       (make-cor 0 1) 'E1)])
+                                                      (make-cor 1 2)) 'E2)
+                                       (make-cor 0 1) 'E2)])
         (check-equal? (gamestate-layout result) expected-layout)
         (check-equal? (gamestate-player1 result) player1)
         (check-equal? (gamestate-player2 result) player2)))
-  (test-case "single bomb with player2 in range"
+
+ 
+  ;; Test 6: Single bomb, player2 in range
+  (test-case "Single bomb with player2 in range"
     (let* ([layout-all-W
               (vector
                (vector 'W 'W 'W)
@@ -648,13 +678,15 @@
                                               (list (make-cor 0 1) 
                                                     (make-cor 2 1) 
                                                     (make-cor 1 0) 
-                                                    (make-cor 1 2)) 'E1)
-                                     (make-cor 1 1) 'E1D)])
+                                                    (make-cor 1 2)) 'E2)
+                                     (make-cor 1 1) 'E2D)])
       (check-equal? (gamestate-layout result) expected-layout)
       (check-equal? (gamestate-player1 result) player1)
       (check-equal? (gamestate-player2 result)
                     (make-player2 (make-cor 1 1) "D"))))
-  (test-case "chain explosion with player1 in range"
+
+  ;; Test 7: Multiple bombs, chain reaction with player1 in range
+  (test-case "Chain reaction with player1 in range"
     (let* ([layout-all-W
               (vector
                (vector 'W 'W 'W)
@@ -670,14 +702,16 @@
                                                       (list (make-cor 0 1)
                                                             (make-cor 2 1)
                                                             (make-cor 1 0)
-                                                            (make-cor 1 2)) 'E1)
+                                                            (make-cor 1 2)) 'E2)
                                               (make-cor 1 1) 'E1L)
-                                     (make-cor 0 1) 'E1)])
+                                     (make-cor 0 1) 'E2)])
       (check-equal? (gamestate-layout result) expected-layout)
       (check-equal? (gamestate-player1 result)
                     (make-player1 (make-cor 1 1) "L"))
       (check-equal? (gamestate-player2 result) player2)))
-  (test-case "no chain explosion"
+
+  ;; Test 8: No chain reaction, players unaffected
+  (test-case "No chain reaction: Layout and players remain correct"
     (let* ([layout-all-W
               (vector
                (vector 'W 'W 'W)
@@ -694,10 +728,12 @@
                                             (make-cor 0 1) 
                                             (make-cor 2 1) 
                                             (make-cor 1 0) 
-                                            (make-cor 1 2)) 'E1)])
+                                            (make-cor 1 2)) 'E2)])
       (check-equal? (gamestate-layout result) expected-layout)
       (check-equal? (gamestate-player1 result) player1)
       (check-equal? (gamestate-player2 result) player2)))
+
+  ;; Test 9: Bomb countdown > 0, no explosion
   (test-case "bombs with countdown > 0 do not explode"
     (let* ([layout-all-W
               (vector
@@ -713,7 +749,9 @@
       (check-equal? (gamestate-layout result) layout-all-W)
       (check-equal? (gamestate-player1 result) player1)
       (check-equal? (gamestate-player2 result) player2)))
-  (test-case "chain explosion and both players in range"
+
+  ;; Test 10: Complex chain reaction with all players affected
+  (test-case "both players in range"
     (let* ([layout-all-W
               (vector
                (vector 'W 'W 'W)
@@ -728,10 +766,10 @@
            [expected-layout (convert (convert (convert (convert layout-all-W
                                                                (list (make-cor 1 1) 
                                                                      (make-cor 2 1) 
-                                                                     (make-cor 1 0)) 'E1)
+                                                                     (make-cor 1 0)) 'E2)
                                                       (make-cor 1 1) 'E1U)
-                                              (make-cor 0 1) 'E1)
-                                     (make-cor 1 2) 'E1R)])
+                                              (make-cor 0 1) 'E2)
+                                     (make-cor 1 2) 'E2R)])
       (check-equal? (gamestate-layout result) expected-layout)
       (check-equal? (gamestate-player1 result)
                     (make-player1 (make-cor 0 1) "U"))
@@ -741,12 +779,14 @@
   
   
 
+;;timehandler
 
 ;;homepage
 (define homepage-tests
   (test-suite "homepage state tests"
     (test-case "timehandler does not change homepage state"
       (check-equal? (timehandler homepage-state) homepage-state))))
+
 
 
 ;;in-game
@@ -759,7 +799,7 @@
           (vector 'W 'W 'W))]
         )
   (test-suite "timehandler tests"
-    (test-case "empty layout with no bombs"
+    (test-case "Empty layout with no bombs"
       (let (
             [example-state
              (make-gamestate test-layout
@@ -778,7 +818,7 @@
                                       9
                                       3
                                       #f))))
-    (test-case "bomb countdown decreases"
+    (test-case "Bomb countdown decreases"
       (let (
             [example-state
              (make-gamestate test-layout
@@ -799,7 +839,7 @@
                                       9
                                       3
                                       #f))))
-    (test-case "roundtimer triggers maximum increase"
+    (test-case "Roundtimer triggers maximum increment"
       (let (
             [example-state
              (make-gamestate test-layout
@@ -818,7 +858,7 @@
                                       89
                                       4
                                       #f))))
-    (test-case "maximum does not exceed limit"
+    (test-case "Maximum does not exceed limit"
       (let (
             [example-state
              (make-gamestate test-layout
@@ -878,7 +918,8 @@
 ;; end?-tests
 (define end?-tests
   (test-suite "end? Tests"
-    (test-case "game quit"
+    ;;
+    (test-case "Game quit"
       (let* ([example-layout (vector
                               (vector 'W 'W 'W)
                               (vector 'W 'W 'W)
@@ -892,7 +933,9 @@
                              3
                              #t)])
         (check-true (end? example-state))))
-    (test-case "homepage state"
+
+    ;;
+    (test-case "Homepage state"
       (let* ([example-layout (vector
                               (vector 'W 'W 'W)
                               (vector 'W 'W 'W)
@@ -906,7 +949,9 @@
                              3
                              #f)])
         (check-false (end? example-state))))
-    (test-case "both players died"
+
+    ;;
+    (test-case "Both players died"
       (let* ([example-layout (vector
                               (vector 'W 'W 'W)
                               (vector 'W 'W 'W)
@@ -920,7 +965,9 @@
                              3
                              #f)])
         (check-true (end? example-state))))
-    (test-case "player 1 died"
+
+    ;; 
+    (test-case "Player 1 died"
       (let* ([example-layout (vector
                               (vector 'W 'W 'W)
                               (vector 'W 'W 'W)
@@ -950,7 +997,9 @@
                              3
                              #f)])
         (check-true (end? example-state))))
-    (test-case "time finishes"
+
+    ;; 
+    (test-case "Time finishes"
       (let* ([example-layout (vector
                               (vector 'W 'W 'W)
                               (vector 'W 'W 'W)
@@ -964,7 +1013,9 @@
                              3
                              #f)])
         (check-true (end? example-state))))
-    (test-case "game continues"
+
+    ;;
+    (test-case "Game continues"
       (let* ([example-layout (vector
                               (vector 'W 'W 'W)
                               (vector 'W 'W 'W)
