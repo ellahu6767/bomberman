@@ -1,0 +1,88 @@
+\documentclass[12pt]{article}
+\usepackage{geometry}
+\usepackage{titlesec}
+\usepackage{setspace}
+\usepackage{fontsize}
+
+% 页面设置
+\geometry{a4paper, margin=1in}
+
+% 标题格式设置
+\titleformat{\section}[block]
+  {\normalfont\centering\fontsize{25}{20}\bfseries} % 居中设置，字体大小 16pt
+  {}{0em}{}[\titlerule]
+  
+
+\titleformat{\subsection}[block]
+  {\normalfont\centering\fontsize{22}{18}\bfseries} % Subsection 居中设置，字体大小 14pt
+  {}{0em}{}[\titlerule]
+
+% 正文字体和段落设置
+\setlength{\parindent}{1.27cm} % 首行缩进
+\setlength{\parskip}{0pt} % 段落间距
+
+\renewcommand{\normalsize}{\fontsize{15}{17}\selectfont}
+
+
+% 标题和作者信息
+\title{\fontsize{30}{24}\selectfont \textbf{Bomberman Developer Guide}} % 标题字体 30pt 加粗
+\author{}
+\date{}
+
+
+\begin{document}
+
+% 生成标题
+\maketitle
+
+\section{Public}
+\hspace{1.27cm}This section defines frequently used functions that are shared across the modules. These include the following:
+
+\texttt{get-symbol:} Retrieves the symbol at a given coordinate in the layout. 
+
+\texttt{convert:} Updates the layout by replacing the symbol at a given coordinate or a list of coordinates with a new symbol. 
+
+\texttt{in-bound?:} Checks whether a given coordinate is within the valid bounds of the layout. 
+
+\section{Render}
+\hspace{1.27cm}This section explains the rendering logic, including how the game layout, players, and other visual components are displayed on the screen.
+
+\section{Keyhandler}
+\hspace{1.27cm}This section discusses the handling of user inputs (keyboard events), which affect player movement, bomb placement, and other game actions.
+
+\section{Timehandler}
+\hspace{1.27cm}The timehandler function is the core logic for the on-tick process, responsible for updating the game state during each tick. It first calls the updated-layout and updated-bomb functions to update the game layout and the countdown of bombs, while also handling the round timer and the maximum number of bombs. If any bomb's countdown reaches 0, it invokes the boom function to handle the chain explosion effect. Within boom, the single-boom-range function calculates the explosion range of a single bomb, and extend-direction is called to extend the explosion range in each direction. The player and layout states are then updated accordingly. Auxiliary functions like check-I? and check-D? are used to determine whether a specific cell is an indestructible or destructible wall, while chain-explosion processes chain reactions and updates the bomb list. Through the close cooperation of these functions, timehandler dynamically updates all critical game states during each tick.
+
+\section{Big-bang}
+\hspace{1.27cm}This section describes the main game loop, which integrates all modules using the \texttt{big-bang} framework. It initializes the game state, handles user inputs, updates the game state on each tick, and renders the game layout.
+
+The \texttt{big-bang} function ties together the following components:
+- \texttt{on-tick:} Calls the \texttt{timehandler} function to update the game state dynamically at each tick.
+- \texttt{on-key:} Invokes the keyhandler functions to process user inputs, such as player movements and bomb placements.
+- \texttt{to-draw:} Uses render functions to display the current game layout, including players, bombs, and other elements.
+- \texttt{stop-when:} Determines when the game should end by calling the \texttt{end?} function.
+- \texttt{final:} Displays the appropriate endgame screen when the game ends.
+
+This structure ensures smooth integration of all modules and provides a responsive gameplay experience.
+
+\section{Stop-when}
+\hspace{1.27cm}This section describes the logic for determining when the game should stop and how the final game state is displayed. It consists of the following key functions:
+
+\texttt{end?:} This function checks whether the game should stop based on the current game state. The game ends if any of the following conditions are met:
+- The player has chosen to quit the game.
+- The round timer reaches 0.
+- Both players have died.
+- Player 1 has died.
+- Player 2 has died.
+The function returns \texttt{\#t} if any of these conditions are true and \texttt{\#f} otherwise.
+
+\texttt{final:} Once the game ends, this function determines the final image to display based on the game state. 
+- If the player has chosen to quit, it returns \texttt{quit-image}.
+- If both players have died or the round timer has finished, it returns \texttt{tie}.
+- If only Player 1 has died, it returns \texttt{player2-win}.
+- If only Player 2 has died, it returns \texttt{player1-win}.
+This ensures that the appropriate message is displayed to reflect the game's outcome.
+
+Auxiliary functions such as \texttt{check-player1-died?}, \texttt{check-player2-died?}, and \texttt{check-all-died?} are used by \texttt{end?} to evaluate the players' statuses. Additionally, helper functions like \texttt{player1-win}, \texttt{player2-win}, and \texttt{tie} are invoked by \texttt{final} to generate specific endgame images based on the result.
+
+\end{document}
