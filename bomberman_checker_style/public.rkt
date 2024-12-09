@@ -6,8 +6,6 @@
 (require racket/vector)
 (require racket/system)
 (require racket/base)
-(require rackunit)
-(require rackunit/text-ui)
 
 (provide (all-defined-out))
 

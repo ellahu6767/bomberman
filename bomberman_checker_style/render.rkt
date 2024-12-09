@@ -7,8 +7,6 @@
 (require racket/system)
 (require racket/base)
 (require "public.rkt")
-(require rackunit)
-(require rackunit/text-ui)
 
 (provide (all-defined-out))
 
@@ -76,23 +74,6 @@
           acc
           (loop (+ i 1)
                 (above acc (render-row (vector-ref layout i))))))))
-
-;;tests
-(define render-layout-tests 
-  (test-suite "render-layout-tests"
-              (test-case "layout-all-W"
-                         (let (
-                               [layout-all-W
-                                (vector
-                                 (vector 'W 'W 'W)
-                                 (vector 'W 'W 'W)
-                                 (vector 'W 'W 'W))]
-                               )
-                           (above (beside (render-cell 'W) (render-cell 'W) (render-cell 'W))
-                                  (beside (render-cell 'W) (render-cell 'W) (render-cell 'W))
-                                  (beside (render-cell 'W) (render-cell 'W) (render-cell 'W)))))))
-
-(run-tests render-layout-tests)
 
 ;convert-seconds-to-minutes-and-seconds-string:
 ;Number -> String

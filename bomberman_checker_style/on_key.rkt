@@ -11,6 +11,11 @@
 
 (provide (all-defined-out))
 
+;Layout Cor -> String
+;get the 1st letter of the symbol at this cor
+(define (1st-letter layout cor)
+  (string-ith (symbol->string (get-symbol layout cor)) 0))
+
 ;Layout Cor -> Boolean
 ;is this cor a walkable cor?
 (define (move-predicate? layout cor)
@@ -20,8 +25,6 @@
        (or (equal? (1st-letter layout cor) "W") ; aisle is walkable
            (equal? (1st-letter layout cor) "E")))) ; explosion area is also walkable
 
-
-  
 ;Gamestate Cor Owner -> Boolean
 ;can this player put this bomb?
 (define (put-predicate? gamestate current-cor owner)
@@ -31,11 +34,6 @@
                                   (gamestate-bomb gamestate)))])
   (and (< nbomb (gamestate-maximum gamestate))
        (not (equal? "B" (1st-letter (gamestate-layout gamestate) current-cor)))))) ;cannot put multiple bombs on one cell
-
-;Layout Cor -> String
-;get the 1st letter of the symbol at this cor
-(define (1st-letter layout cor)
-  (string-ith (symbol->string (get-symbol layout cor)) 0))
 
 ;Cor direction -> Cor
 ;get the new-cor after 1-step movement, assuming movement is possible
@@ -68,7 +66,7 @@
      (gamestate-roundtimer gamestate)
      (gamestate-maximum gamestate)
      (gamestate-quit? gamestate))))
-                 
+
 ;Gamestate Cor Symbol Layout Who Direction -> Gamestate
 ;the gamestate after one movement is done
 (define (move gamestate old-cor old-symbol old-layout who direction)
@@ -76,21 +74,24 @@
          [can-move? (move-predicate? old-layout new-cor)]
          [new-symbol (if can-move?
                           (string->symbol (string-append (1st-letter old-layout new-cor) who direction))
-                          ;can-move? 2 cells
+                          ;can-move? change cor and direction
                           (string->symbol (string-append (1st-letter old-layout old-cor) who direction)))]
+                          ;no can-move, change only dir
          [restore-symbol (string->symbol (1st-letter old-layout old-cor))]
          [new-layout (if can-move?                 
                          (convert (convert old-layout old-cor restore-symbol) new-cor new-symbol)
+                         ;can-move?, restore old cell and change the new cell
                          (convert old-layout old-cor new-symbol)
+                         ;else, change only direction
                          )])
     (make-gamestate
      new-layout
      (gamestate-bomb gamestate)
      (if (equal? who "1")
-         (make-player1 (if can-move? new-cor old-cor) direction)
+         (make-player1 (if can-move? new-cor old-cor) direction) ;P1 move?
          (gamestate-player1 gamestate))
      (if (equal? who "2")
-         (make-player2 (if can-move? new-cor old-cor) direction)
+         (make-player2 (if can-move? new-cor old-cor) direction) ;P2 move?
          (gamestate-player2 gamestate))
      (gamestate-roundtimer gamestate)
      (gamestate-maximum gamestate)

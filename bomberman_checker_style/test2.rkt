@@ -1,13 +1,17 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
 #reader(lib "htdp-advanced-reader.ss" "lang")((modname test2) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
+(require 2htdp/image)
+(require 2htdp/universe)
+(require racket/vector)
+(require racket/system)
 (require racket/base)
+(require racket/string)
 (require "public.rkt")
 (require "on_key.rkt")
 (require "render.rkt")
 (require rackunit)
 (require rackunit/text-ui)
-(require 2htdp/image)
 
 ;;----------render----------;;
 ;;
@@ -189,6 +193,20 @@
                 SPACE
                 (text "P2: 0" 30 "indigo"))))))
 ;;
+(define render-layout-tests 
+  (test-suite "render-layout-tests"
+              (test-case "layout-all-W"
+                         (let (
+                               [layout-all-W
+                                (vector
+                                 (vector 'W 'W 'W)
+                                 (vector 'W 'W 'W)
+                                 (vector 'W 'W 'W))]
+                               )
+                           (above (beside (render-cell 'W) (render-cell 'W) (render-cell 'W))
+                                  (beside (render-cell 'W) (render-cell 'W) (render-cell 'W))
+                                  (beside (render-cell 'W) (render-cell 'W) (render-cell 'W)))))))
+;;
 (define render-tests
   (test-suite " "
    (test-case "render for homepage layout"
@@ -204,9 +222,118 @@
                 (render-bar 120 3 0 0)
                 (render-layout random-layout))))))
 
+;;----------on_key----------;;
+(define example-layout
+  (vector
+   (vector 'W1D 'W 'W 'W 'I)
+   (vector 'W 'I 'E1 'W 'D)
+   (vector 'W 'W 'E2 'W 'D)
+   (vector 'W 'B 'W 'W 'D)
+   (vector 'W 'W 'W 'W 'W2U)))
 
+(define example-layout1
+  (vector
+   (vector 'W1D 'W 'W 'W 'I)
+   (vector 'B 'I 'E1 'W 'D)
+   (vector 'W 'W 'B 'W 'D)
+   (vector 'W 'E0 'W 'W 'D)
+   (vector 'W 'B 'W 'W 'W2U)))
 
+(define example-layout2
+  (vector
+   (vector 'W1D 'W 'W 'W 'I)
+   (vector 'W 'I 'E1 'W 'D)
+   (vector 'W 'W 'E2 'W 'D)
+   (vector 'W 'I 'W 'B 'D)
+   (vector 'B 'W 'B 'W 'W2U)))
 
+(define bomb-list1
+  (make-bombstate (make-cor 0 1) 3 'P1)
+  (make-bombstate (make-cor 1 4) 0 'P2)
+  (make-bombstate (make-cor 2 2) 1 'P1))
+
+(define bomb-list2
+  (make-bombstate (make-cor 0 4) 2 'P2)
+  (make-bombstate (make-cor 2 4) 0 'P1)
+  (make-bombstate (make-cor 3 3) 0 'P2))
+  
+
+(define gamestate1
+  (make-gamestate
+   example-layout
+   bomb-list1
+   (make-player1 (make-cor 0 4) "L")
+   (make-player2 (make-cor 4 4) "U")
+   120
+   3
+   #f))
+
+(define gamestate1
+  (make-gamestate
+   example-layout
+   bomb-list2
+   (make-player1 (make-cor 0 0) "D")
+   (make-player2 (make-cor 2 3) "U")
+   59
+   5
+   #f)) 
+
+;;
+(define move-predicate?-tests
+  (test-suite " "
+   (test-case "valid, walkable aisle"
+              (let ([cor (make-cor 0 2)])
+                (check-true (move-predicate? example-layout cor) "'W")))
+   (test-case "invalid, player 1 in the cell"
+              (let ([cor (make-cor 0 0)])
+                (check-false (move-predicate? example-layout cor) "'W1D")))
+   (test-case "invalid, player 2 in the cell"
+              (let ([cor (make-cor 4 4)])
+                (check-false (move-predicate? example-layout cor) "'W2U")))
+   (test-case "valid, explosion area"
+              (let ([cor (make-cor 2 1)])
+                (check-true (move-predicate? example-layout cor) "'E1")))
+   (test-case "invalid, non-walkable area 'I"
+              (let ([cor (make-cor 4 0)])
+                (check-false (move-predicate? example-layout cor) "'I")))))
+;;
+(define 1st-letter-tests
+  (test-suite " "
+   (test-case "'W1D"
+              (let ([coord (make-cor 0 0)])
+                (check-equal? (1st-letter example-layout coord) "W" " ")))
+   (test-case "'W"
+              (let ([coord (make-cor 0 1)])
+                (check-equal? (1st-letter example-layout coord) "W" " ")))
+   (test-case "'E1"
+              (let ([coord (make-cor 2 1)])
+                (check-equal? (1st-letter example-layout coord) "E" " ")))
+   (test-case "'B"
+              (let ([coord (make-cor 1 3)])
+                (check-equal? (1st-letter example-layout coord) "B" " ")))
+   (test-case "'I"
+              (let ([coord (make-cor 4 0)])
+                (check-equal? (1st-letter example-layout coord) "I" " ")))))
+;;
+(define put-predicate?-tests
+  (test-suite " "
+    (test-case "valid"
+      (check-true (put-predicate? gamestate1 (make-cor 3 0) 'P1) "Player1 can place a bomb at (3, 0)"))
+    (test-case "valid"
+      (check-true (put-predicate? gamestate2 (make-cor 4 1) 'P2) "Player2 can place a bomb at (4, 1)"))))
+;;
+(define renew-cor-tests
+  (test-suite " "
+   (test-case "'D"
+              (check-equal? (renew-cor (make-cor 3 3) "D") (make-cor 3 4) "3 4"))
+   (test-case "'U"
+              (check-equal? (renew-cor (make-cor 3 3) "U") (make-cor 3 2) "3 2"))
+   (test-case "'L"
+              (check-equal? (renew-cor (make-cor 3 3) "L") (make-cor 2 3) "2 3"))
+   (test-case "'R"
+              (check-equal? (renew-cor (make-cor 3 3) "R") (make-cor 4 3) "4 3"))
+   (test-case "invalid"
+              (check-equal? (renew-cor (make-cor 3 3) "X") (make-cor 3 3) "cor"))))
 
 
 
