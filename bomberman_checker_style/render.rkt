@@ -12,8 +12,6 @@
 
 (provide (all-defined-out))
 
-
-
 ; render-cell
 ; symbol -> Image
 (define (render-cell symbol)

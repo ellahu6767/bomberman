@@ -45,6 +45,11 @@
     [(equal? direction "R") (make-cor (+ 1 (cor-column old-cor)) (cor-row old-cor))]
     [else old-cor]))
 
+;Who is one of the following String:
+;- "1"
+;- "2"
+;Interpretation: shortcuts for the player, "1" stays for Player1, "2" stays for Player2
+
 ;Gamestate Layout Cor Direction Who -> Gamestate
 ;put the bomb assuming put-predicate? is #true
 (define (put-bomb gamestate old-layout current-cor current-direction who) ;suppose put-predicate? is #true
