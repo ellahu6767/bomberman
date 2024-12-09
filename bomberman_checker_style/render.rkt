@@ -56,53 +56,8 @@
           [(symbol=? symbol 'E2L) (overlay player2-image-L (bitmap "decorations/Boom.png"))]
           [(symbol=? symbol 'E2R) (overlay player2-image-R (bitmap "decorations/Boom.png"))])))
 
-<<<<<<< Updated upstream
-=======
-
-;render-layout
-;Layout -> Image
-;Render the entire layout as an image
-=======
-;render-row:
-(define (render-row row)
-  (let loop ( ;function name loop
-             [i 0] ;start: i=0
-             [acc empty-image] ;start: acc=empty-image
-             )
-    (if (>= i (vector-length row))
-        acc
-        (loop (+ i 1)
-              (beside acc (render-cell (vector-ref row i)))))))
-;;Test---missing---
-(define render-row-tests
-  (test-suite " "
-   (let ([example-layout (vector
-                          (vector 'I 'W1U 'W2L)
-                          (vector 'E1R 'D 'W)
-                          (vector 'I 'B 'B2U))])
-     ((test-case " "
-                 (check-equal?
-                  (render-row (vector-ref example-layout 0))
-                  (beside (render-cell 'I) (render-cell 'W1U) (render-cell 'W2L))
-                 "1st row"))
-     (test-case " " 
-                (check-equal?
-                 (render-row (vector-ref example-layout 1))
-                 (beside (render-cell 'E1R)
-                         (beside (render-cell 'D) (render-cell 'W)))
-                 "2nd row"))
-     (test-case " "
-                (check-equal?
-                 (render-row (vector-ref example-layout 2))
-                 (beside (render-cell 'I)
-                         (beside (render-cell 'B) (render-cell 'B2U)))
-                 "3rd row"))))))
-
-(run-tests render-row-tests)
-
 ; render-layout
 ; Layout -> Image
->>>>>>> Stashed changes
 (define (render-layout layout)
   (local [(define (render-row row)
             (let loop (
@@ -123,7 +78,7 @@
                 (above acc (render-row (vector-ref layout i))))))))
 
 ;;tests
-(define render-layout-tests
+(define render-layout-tests 
   (test-suite "render-layout-tests"
               (test-case "layout-all-W"
                          (let (
@@ -138,9 +93,6 @@
                                   (beside (render-cell 'W) (render-cell 'W) (render-cell 'W)))))))
 
 (run-tests render-layout-tests)
-                                  
-                           
-
 
 ;convert-seconds-to-minutes-and-seconds-string:
 ;Number -> String
