@@ -12,8 +12,8 @@
 (provide (all-defined-out))
 
 ;Row Col -> Boolean
-;rules for generating 'U in random-layout
-(define (is-U? row col)
+;rules for generating 'I in random-layout
+(define (is-I? row col)
   (and (even? row)          
        (odd? col)          
        (< 0 row (- MAX-ROWS 1))                   
@@ -104,7 +104,7 @@
   (cond
     [(is-player1? row col) 'W1D] ;generate the player1 at the top-left corner
     [(is-player2? row col) 'W2U] ;generate the player2 at the top-right corner
-    [(is-U? row col) 'I] ;generate the fixed indestructible cell
+    [(is-I? row col) 'I] ;generate the fixed indestructible cell
     [(is-fixed-W? row col) 'W] ;generate the safe starting area :` and .: 
     [else (if (zero? (random 2)) 'D 'W)])) ;generate the random cell, destructible if 0, walkable if 1
 
