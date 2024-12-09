@@ -189,6 +189,20 @@
 
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;who;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                                    ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;who;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;data types:
+;Who is one of the following String:
+;-"1"
+;-"2"
+
+;interpretation
+;shortcuts representation for players. "1" represents player1 and "2" represents player2
+
+;examples;
+(define p1 "1")
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;roundtimer;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                                                                           ;

@@ -12,7 +12,7 @@
 
 (provide (all-defined-out))
 
-;layout cor -> boolean
+;Layout Cor -> Boolean
 ;is this cor a walkable cor?
 (define (move-predicate? layout cor)
   (and (in-bound? cor layout)
@@ -21,12 +21,12 @@
        (or (equal? (1st-letter layout cor) "W")
            (equal? (1st-letter layout cor) "E"))))
   
-;gamestate cor who -> boolean
-;who should be "1" or "2"
-(define (put-predicate? gamestate current-cor who-symbol)
-  (let ([nbomb (count-num (filter ;how many bombs belong to who-symbol
+;Gamestate Cor Owner -> Boolean
+;can this player put this bomb?
+(define (put-predicate? gamestate current-cor owner)
+  (let ([nbomb (count-num (filter ;how many bombs belong to this owner
                                   (lambda(bombstate)
-                                    (symbol=? (bombstate-owner bombstate) who-symbol)) ;the bombs those belong to player1
+                                    (symbol=? (bombstate-owner bombstate) owner)) ;the bombs those belong to player1
                                   (gamestate-bomb gamestate)))])
   (and (< nbomb (gamestate-maximum gamestate))
        (not (equal? "B" (1st-letter (gamestate-layout gamestate) current-cor)))))) ;cannot put multiple bombs on one cell

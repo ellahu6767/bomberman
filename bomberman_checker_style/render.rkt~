@@ -11,7 +11,10 @@
 
 (provide (all-defined-out))
 
-;Row Col -> Boolean
+
+
+
+;row col -> Boolean
 ;rules for generating 'U in random-layout
 (define (is-U? row col)
   (and (even? row)          
@@ -19,12 +22,12 @@
        (< 0 row (- MAX-ROWS 1))                   
        (< 0 col (- MAX-COLS 1))))
 
-;Row Col -> Boolean
+;row col -> Boolean
 ;rules for generating 'W1D in random-layout
 (define (is-player1? row col)
   (= 0 (+ row col)))
 
-;Row Col -> Boolean
+;row col -> Boolean
 ;rules for generating 'W2U in random-layout
 (define (is-player2? row col)
   (= (+ (- MAX-ROWS 1) (- MAX-COLS 1)) (+ row col)))
