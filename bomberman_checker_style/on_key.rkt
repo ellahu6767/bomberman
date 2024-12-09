@@ -6,461 +6,194 @@
 (require racket/vector)
 (require racket/system)
 (require racket/base)
+(require racket/string)
 (require "public.rkt")
 (require "render.rkt")
 
 
+
 (provide (all-defined-out))
 
-;; move-predicate?: gamestate cor -> Boolean
+;layout cor -> boolean
+;is this cor a walkable cor?
+(define (move-predicate? layout cor)
+  (and (in-bound? cor layout)
+       (or (string-contains? (symbol->string (get-symbol layout cor)) "W")
+           (string-contains? (symbol->string (get-symbol layout cor)) "E"))))
+  
+;gamestate cor who -> boolean
+;who should be "1" or "2"
+(define (put-predicate? gamestate current-cor who-symbol)
+  (let ([nbomb (count-num (filter ;how many bombs belong to who-symbol
+                                  (lambda(bombstate)
+                                    (symbol=? (bombstate-owner bombstate) who-symbol)) ;the bombs those belong to player1
+                                  (gamestate-bomb gamestate)))])
+  (and (< nbomb (gamestate-maximum gamestate))
+       (not (equal? "B" (1st-letter (gamestate-layout gamestate) current-cor)))))) ;cannot put multiple bombs on one cell
 
+(define (1st-letter layout cor)
+  (string-ith (symbol->string (get-symbol layout cor)) 0))
 
-(define (move-predicate? layout new-cor)
-  (let (
-        [new-symbol (get-symbol layout new-cor)]
-        )
-  (and (in-bound? new-cor layout)
-       (or
-        (symbol=? new-symbol 'W) ;walkable
-        (= (string-length (symbol->string new-symbol)) 2))))) ;'E0, 'E1, 'E2
+(define (put-bomb gamestate old-layout current-cor current-direction who) ;suppose put-predicate? is #true
+  (let* ([new-symbol (string->symbol (string-append "B" who current-direction))]
+         [new-layout (convert old-layout current-cor new-symbol)]
+         [new-bomb-owner (string->symbol (string-append "P" who))]
+         [new-bomb (make-bombstate current-cor 3 new-bomb-owner)]
+         [new-bomb-list (cons new-bomb (gamestate-bomb gamestate))])
+    (make-gamestate
+     new-layout
+     new-bomb-list
+     (gamestate-player1 gamestate)
+     (gamestate-player2 gamestate)
+     (gamestate-roundtimer gamestate)
+     (gamestate-maximum gamestate)
+     (gamestate-quit? gamestate))))
+                 
+;gamestate -> gamestate
+;move-down player1
+;who: "1" or "2"
+(define (move-down gamestate old-cor old-symbol old-layout who)
+  (let* ([new-cor (make-cor (cor-column old-cor) (+ 1 (cor-row old-cor)))]
+         [can-move? (move-predicate? old-layout new-cor)]
+         [new-symbol (if can-move?
+                          (string->symbol (string-append (1st-letter old-layout new-cor) who "D"))
+                          (string->symbol (string-append (1st-letter old-layout old-cor) who "D")))]
+         [restore-symbol (string->symbol (1st-letter old-layout old-cor))]
+         [new-layout (if can-move?                 
+                         (convert (convert old-layout old-cor restore-symbol) new-cor new-symbol)
+                         (convert old-layout old-cor new-symbol)
+                         )])
+    (make-gamestate
+     new-layout
+     (gamestate-bomb gamestate)
+     (if (equal? who "1")
+         (make-player1 (if can-move? new-cor old-cor) "D")
+         (gamestate-player1 gamestate))
+     (if (equal? who "2")
+         (make-player2 (if can-move? new-cor old-cor) "D")
+         (gamestate-player2 gamestate))
+     (gamestate-roundtimer gamestate)
+     (gamestate-maximum gamestate)
+     (gamestate-quit? gamestate))))
 
-;; put-predicate?: layout cor owner maximum
-(define (put-predicate? layout current-cor owner maximum)
-  (let (
-        [current-symbol (get-symbol layout current-cor)]
-        )
-    (and (< owner maximum) ;is the bomb number < maximum
-         (= (string-length (symbol->string current-symbol)) 3)))) ;is 'W[1|2][U|L|R|D]
+(define (move-up gamestate old-cor old-symbol old-layout who)
+  (let* ([new-cor (make-cor (cor-column old-cor) (- (cor-row old-cor) 1))]
+         [can-move? (move-predicate? old-layout new-cor)]
+         [new-symbol (if can-move?
+                          (string->symbol (string-append (1st-letter old-layout new-cor) who "U"))
+                          (string->symbol (string-append (1st-letter old-layout old-cor) who "U")))]
+         [restore-symbol (string->symbol (1st-letter old-layout old-cor))]
+         [new-layout (if can-move?
+                         (convert (convert old-layout old-cor restore-symbol) new-cor new-symbol)
+                         (convert old-layout old-cor new-symbol))])
+    (make-gamestate
+     new-layout
+     (gamestate-bomb gamestate)
+     (if (equal? who "1")
+         (make-player1 (if can-move? new-cor old-cor) "U")
+         (gamestate-player1 gamestate))
+     (if (equal? who "2")
+         (make-player2 (if can-move? new-cor old-cor) "U")
+         (gamestate-player2 gamestate))
+     (gamestate-roundtimer gamestate)
+     (gamestate-maximum gamestate)
+     (gamestate-quit? gamestate))))
 
-;;keyhandler:
-;;gamestate ke -> gamestate
+(define (move-left gamestate old-cor old-symbol old-layout who)
+  (let* ([new-cor (make-cor (- (cor-column old-cor) 1) (cor-row old-cor))]
+         [can-move? (move-predicate? old-layout new-cor)]
+         [new-symbol (if can-move?
+                          (string->symbol (string-append (1st-letter old-layout new-cor) who "L"))
+                          (string->symbol (string-append (1st-letter old-layout old-cor) who "L")))]
+         [restore-symbol (string->symbol (1st-letter old-layout old-cor))]
+         [new-layout (if can-move?
+                         (convert (convert old-layout old-cor restore-symbol) new-cor new-symbol)
+                         (convert old-layout old-cor new-symbol))])
+    (make-gamestate
+     new-layout
+     (gamestate-bomb gamestate)
+     (if (equal? who "1")
+         (make-player1 (if can-move? new-cor old-cor) "L")
+         (gamestate-player1 gamestate))
+     (if (equal? who "2")
+         (make-player2 (if can-move? new-cor old-cor) "L")
+         (gamestate-player2 gamestate))
+     (gamestate-roundtimer gamestate)
+     (gamestate-maximum gamestate)
+     (gamestate-quit? gamestate))))
+
+(define (move-right gamestate old-cor old-symbol old-layout who)
+  (let* ([new-cor (make-cor (+ 1 (cor-column old-cor)) (cor-row old-cor))]
+         [can-move? (move-predicate? old-layout new-cor)]
+         [new-symbol (if can-move?
+                          (string->symbol (string-append (1st-letter old-layout new-cor) who "R"))
+                          (string->symbol (string-append (1st-letter old-layout old-cor) who "R")))]
+         [restore-symbol (string->symbol (1st-letter old-layout old-cor))]
+         [new-layout (if can-move?
+                         (convert (convert old-layout old-cor restore-symbol) new-cor new-symbol)
+                         (convert old-layout old-cor new-symbol))])
+    (make-gamestate
+     new-layout
+     (gamestate-bomb gamestate)
+     (if (equal? who "1")
+         (make-player1 (if can-move? new-cor old-cor) "R")
+         (gamestate-player1 gamestate))
+     (if (equal? who "2")
+         (make-player2 (if can-move? new-cor old-cor) "R")
+         (gamestate-player2 gamestate))
+     (gamestate-roundtimer gamestate)
+     (gamestate-maximum gamestate)
+     (gamestate-quit? gamestate))))
+
 (define (keyhandler gamestate ke)
-  (if (string=? ke "q")
-      (make-gamestate
-       (gamestate-layout gamestate)
-       (gamestate-bomb gamestate)
-       (gamestate-player1 gamestate)
-       (gamestate-player2 gamestate)
-       (gamestate-roundtimer gamestate)
-       (gamestate-maximum gamestate)
-       #t)
-  (let (
-        [layout (gamestate-layout gamestate)]
-        )
-    (cond
-      [(equal? layout homepage)
-       (if (string=? ke " ")
-           initial-state
-           gamestate)]
-      [else
-  (let* (
-         [layout (gamestate-layout gamestate)]
-         [current-cor (player1-cor (gamestate-player1 gamestate))] ;the cor where player 1 is
-         [current-symbol (get-symbol layout current-cor)]
-         [current-direction (player1-direction (gamestate-player1 gamestate))]
-         [current-cor-column (cor-column current-cor)]
-         [current-cor-row (cor-row current-cor)]
-         [maximum (gamestate-maximum gamestate)]
-         
-         [current-cor2 (player2-cor (gamestate-player2 gamestate))] ;p2
-         [current-symbol2 (get-symbol layout current-cor2)] ;p2
-         [current-direction2 (player2-direction (gamestate-player2 gamestate))] ;p2
-         [current-cor2-column (cor-column current-cor2)] ;p2
-         [current-cor2-row (cor-row current-cor2)] ;p2
-         )
-    
-    (cond
-      
-      ;;down
-      [(string=? ke "down") ;p1 down
-       (let* (
-              [new-cor (make-cor current-cor-column (+ current-cor-row 1))]
-              [new-direction "D"]
-              ;the direction is still old
-              [new-symbol (string->symbol (string-ith (symbol->string (get-symbol layout new-cor)) 0))]
-              ;the first letter of the symbol of the new-cor
-              [final-symbol (string->symbol
-                             (string-append (symbol->string new-symbol) "1" new-direction))]
-              ;new-symbol 1 newdirection
-              [can-move (move-predicate? layout new-cor)]
-              ;is the next direction movable?
-              [updated-layout
-               (if can-move
-                   (let* (
-                          [restored-symbol ;old cor without the player
-                           (if (= (string-length (symbol->string current-symbol)) 3)
-                               (string->symbol (string-ith (symbol->string current-symbol) 0))
-                               ;take the first symbol of the current-cor, where the player 1 is
-                               current-symbol)]
-                          )
-                                                      
-                     (convert
-                      (convert layout new-cor final-symbol)
-                      current-cor restored-symbol)) ;restored-symbol on the layout
-
-                   (convert layout current-cor ;else
-                            (string->symbol
-                             (string-append
-                              (string-ith (symbol->string current-symbol) 0) ;current-cor, unchanged
-                              "1" ;player1, unchanged                                     
-                              new-direction))))] ;new-direction, changed                     
-
-              )               
-         (make-gamestate 
-          updated-layout
-          (gamestate-bomb gamestate)
-          (make-player1
-           (if can-move
-               new-cor
-               current-cor)
-           new-direction) 
-          (gamestate-player2 gamestate)
-          (gamestate-roundtimer gamestate)
-          (gamestate-maximum gamestate)
-          (gamestate-quit? gamestate)))]
-
-      [(string=? ke "s") ;p2 down
-       (let* (
-              [new-cor (make-cor current-cor2-column (+ current-cor2-row 1))]
-              [new-direction "D"]            
-              [new-symbol (string->symbol (string-ith (symbol->string (get-symbol layout new-cor)) 0))]
-              [final-symbol (string->symbol
-                             (string-append (symbol->string new-symbol) "2" new-direction))]
-              [can-move (move-predicate? layout new-cor)]
-              [updated-layout
-               (if can-move
-                   (let* (
-                          [restored-symbol 
-                           (if (= (string-length (symbol->string current-symbol2)) 3)
-                               (string->symbol (string-ith (symbol->string current-symbol2) 0))
-                               current-symbol2)]
-                          )
-                                                      
-                     (convert 
-                      (convert layout new-cor final-symbol)
-                      current-cor2 restored-symbol))
-
-                   (convert layout current-cor2
-                            (string->symbol
-                             (string-append
-                              (string-ith (symbol->string current-symbol2) 0)
-                              "2"                                   
-                              new-direction))))]                    
-
-              )               
-         (make-gamestate 
-          updated-layout
-          (gamestate-bomb gamestate)
-          (gamestate-player1 gamestate)
-          (make-player2
-           (if can-move
-               new-cor
-               current-cor2)
-           new-direction) 
-          (gamestate-roundtimer gamestate)
-          (gamestate-maximum gamestate)
-          (gamestate-quit? gamestate)))]   
-
-     ;;up
-      [(string=? ke "up") ;p1 up
-       (let* (
-              [new-cor (make-cor current-cor-column (- current-cor-row 1))]
-              [new-direction "U"]
-              [new-symbol (string->symbol (string-ith (symbol->string (get-symbol layout new-cor)) 0))]
-              [final-symbol (string->symbol
-                             (string-append (symbol->string new-symbol) "1" new-direction))]
-              [can-move (move-predicate? layout new-cor)]
-              [updated-layout
-               (if can-move
-                   (let* ([restored-symbol
-                           (if (= (string-length (symbol->string current-symbol)) 3)
-                               (string->symbol (string-ith (symbol->string current-symbol) 0))
-                               current-symbol)]
-                          )
-                     (convert
-                      (convert layout new-cor final-symbol)
-                      current-cor restored-symbol))
-                   (convert layout current-cor
-                            (string->symbol
-                             (string-append
-                              (string-ith (symbol->string current-symbol) 0)
-                              "1"
-                              new-direction))))]                       
-          )               
-     (make-gamestate
-          updated-layout
-          (gamestate-bomb gamestate)
-          (make-player1
-           (if can-move
-               new-cor
-               current-cor)
-           new-direction) 
-          (gamestate-player2 gamestate)
-          (gamestate-roundtimer gamestate)
-          (gamestate-maximum gamestate)
-          (gamestate-quit? gamestate)))]
-
-      [(string=? ke "w") ;p2 up
-       (let* (
-              [new-cor (make-cor current-cor2-column (- current-cor2-row 1))]
-              [new-direction "U"]
-              [new-symbol (string->symbol (string-ith (symbol->string (get-symbol layout new-cor)) 0))]
-              [final-symbol (string->symbol
-                             (string-append (symbol->string new-symbol) "2" new-direction))]
-              [can-move (move-predicate? layout new-cor)]
-              [updated-layout
-               (if can-move
-                   (let* ([restored-symbol
-                           (if (= (string-length (symbol->string current-symbol2)) 3)
-                               (string->symbol (string-ith (symbol->string current-symbol2) 0))
-                               current-symbol2)]
-                          )
-                     (convert
-                      (convert layout new-cor final-symbol)
-                      current-cor2 restored-symbol))
-                   (convert layout current-cor2
-                            (string->symbol
-                             (string-append
-                              (string-ith (symbol->string current-symbol2) 0)
-                              "2"
-                              new-direction))))]                       
-          )               
-     (make-gamestate
-          updated-layout
-          (gamestate-bomb gamestate)
-          (gamestate-player1 gamestate)
-          (make-player2
-           (if can-move
-               new-cor
-               current-cor2)
-           new-direction) 
-          (gamestate-roundtimer gamestate)
-          (gamestate-maximum gamestate)
-          (gamestate-quit? gamestate)))]
-
-      ;;left
-      [(string=? ke "left") ;p1 left
-       (let* (
-              [new-cor (make-cor (- current-cor-column 1) current-cor-row)]
-              [new-direction "L"]
-              [new-symbol (string->symbol (string-ith (symbol->string (get-symbol layout new-cor)) 0))]
-              [final-symbol (string->symbol
-                         (string-append (symbol->string new-symbol) "1" new-direction))]
-              [can-move (move-predicate? layout new-cor)]
-              [updated-layout
-               (if can-move
-                   (let* ([restored-symbol
-                           (if (= (string-length (symbol->string current-symbol)) 3)
-                               (string->symbol (string-ith (symbol->string current-symbol) 0))
-                               current-symbol)]
-                          )
-                     
-                     (convert
-                      (convert layout new-cor final-symbol)
-                      current-cor restored-symbol))
-                   (convert layout current-cor
-                            (string->symbol
-                             (string-append
-                              (string-ith (symbol->string current-symbol) 0)
-                              "1"
-                              new-direction))))]                       
-          )               
-     (make-gamestate
-          updated-layout
-          (gamestate-bomb gamestate)
-          (make-player1
-           (if can-move
-               new-cor
-               current-cor)
-           new-direction) 
-          (gamestate-player2 gamestate)
-          (gamestate-roundtimer gamestate)
-          (gamestate-maximum gamestate)
-          (gamestate-quit? gamestate)))]
-
-      [(string=? ke "a") ;p2 left
-       (let* (
-              [new-cor (make-cor (- current-cor2-column 1) current-cor2-row)]
-              [new-direction "L"]
-              [new-symbol (string->symbol (string-ith (symbol->string (get-symbol layout new-cor)) 0))]
-              [final-symbol (string->symbol
-                         (string-append (symbol->string new-symbol) "2" new-direction))]
-              [can-move (move-predicate? layout new-cor)]
-              [updated-layout
-               (if can-move
-                   (let* ([restored-symbol
-                           (if (= (string-length (symbol->string current-symbol2)) 3)
-                               (string->symbol (string-ith (symbol->string current-symbol2) 0))
-                               current-symbol2)]
-                          )
-                     
-                     (convert
-                      (convert layout new-cor final-symbol)
-                      current-cor2 restored-symbol))
-                   (convert layout current-cor2
-                            (string->symbol
-                             (string-append
-                              (string-ith (symbol->string current-symbol2) 0)
-                              "2"
-                              new-direction))))]                       
-          )               
-     (make-gamestate
-          updated-layout
-          (gamestate-bomb gamestate)
-          (gamestate-player1 gamestate)
-          (make-player2
-           (if can-move
-               new-cor
-               current-cor2)
-           new-direction)           
-          (gamestate-roundtimer gamestate)
-          (gamestate-maximum gamestate)
-          (gamestate-quit? gamestate)))] 
-
-  ;;right
-      [(string=? ke "right") ;p1 right
-       (let* (
-              [new-cor (make-cor (+ current-cor-column 1) current-cor-row)]
-              [new-direction "R"]
-              [new-symbol (string->symbol (string-ith (symbol->string (get-symbol layout new-cor)) 0))]
-              [final-symbol (string->symbol
-                         (string-append (symbol->string new-symbol) "1" new-direction))]
-              [can-move (move-predicate? layout new-cor)]
-              [updated-layout
-               (if can-move
-                   (let* ([restored-symbol
-                           (if (= (string-length (symbol->string current-symbol)) 3)
-                               (string->symbol (string-ith (symbol->string current-symbol) 0))
-                               current-symbol)]
-
-                          )
-                     
-                     (convert
-                      (convert layout new-cor final-symbol)
-                      current-cor restored-symbol))
-                   (convert layout current-cor
-                            (string->symbol
-                             (string-append
-                              (string-ith (symbol->string current-symbol) 0)
-                              "1"
-                              new-direction))))]                       
-          )               
-     (make-gamestate
-          updated-layout
-          (gamestate-bomb gamestate)
-          (make-player1
-           (if can-move
-               new-cor
-               current-cor)
-           new-direction) 
-          (gamestate-player2 gamestate)
-          (gamestate-roundtimer gamestate)
-          (gamestate-maximum gamestate)
-          (gamestate-quit? gamestate)))]
-
-      [(string=? ke "d") ;p2 right
-       (let* (
-              [new-cor (make-cor (+ current-cor2-column 1) current-cor2-row)]
-              [new-direction "R"]
-              [new-symbol (string->symbol (string-ith (symbol->string (get-symbol layout new-cor)) 0))]
-              [final-symbol (string->symbol
-                         (string-append (symbol->string new-symbol) "2" new-direction))]
-              [can-move (move-predicate? layout new-cor)]
-              [updated-layout
-               (if can-move
-                   (let* ([restored-symbol
-                           (if (= (string-length (symbol->string current-symbol2)) 3)
-                               (string->symbol (string-ith (symbol->string current-symbol2) 0))
-                               current-symbol2)]
-
-                          )
-                     
-                     (convert
-                      (convert layout new-cor final-symbol)
-                      current-cor2 restored-symbol))
-                   (convert layout current-cor2
-                            (string->symbol
-                             (string-append
-                              (string-ith (symbol->string current-symbol2) 0)
-                              "2"
-                              new-direction))))]                       
-          )               
-     (make-gamestate
-          updated-layout
-          (gamestate-bomb gamestate)
-          (gamestate-player1 gamestate)
-          (make-player2
-           (if can-move
-               new-cor
-               current-cor2)
-           new-direction) 
-          (gamestate-roundtimer gamestate)
-          (gamestate-maximum gamestate)
-          (gamestate-quit? gamestate)))]
-      
-      ;; put-bomb
-      [(string=? ke " ") ;p1 bomb
-       (let* (
-              [final-symbol (string->symbol
-                             (string-append "B" "1" current-direction))]
-              [bomb-list (gamestate-bomb gamestate)]
-              [owner1 (count-num (filter ;how many bombs belong to player1
-                                  (lambda(bombstate)
-                                    (symbol=? (bombstate-owner bombstate) 'P1)) ;the bombs those belong to player1
-                                  bomb-list))]
-              [can-put? (put-predicate? layout current-cor owner1 maximum)] ;is the cor putable?
-              [updated-layout
-               (if can-put?                   
-                   (convert layout current-cor final-symbol)
-                   layout)] ;if yes put the bomb there
-              [updated-bomb-list
-               (if can-put?
-                    (cons (make-bombstate current-cor 3 'P1) (gamestate-bomb gamestate))
-                    ;add the bomb into List<Bomb>, set the count-down to 3
-                    (gamestate-bomb gamestate))]
-              )
-         (make-gamestate
-          updated-layout
-          updated-bomb-list
-          (gamestate-player1 gamestate)
-          (gamestate-player2 gamestate)
-          (gamestate-roundtimer gamestate)
-          (gamestate-maximum gamestate)
-          (gamestate-quit? gamestate)))]
-
-      [(string=? ke "g") ;p2 bomb
-       (let* (
-              [final-symbol (string->symbol
-                             (string-append "B" "2" current-direction2))]
-              [bomb-list (gamestate-bomb gamestate)]
-              [owner2 (count-num (filter
-                                  (lambda(bombstate)
-                                    (symbol=? (bombstate-owner bombstate) 'P2)) 
-                                  bomb-list))]
-              [can-put? (put-predicate? layout current-cor2 owner2 maximum)] 
-              [updated-layout
-               (if can-put?                   
-                   (convert layout current-cor2 final-symbol)
-                   layout)] 
-              [updated-bomb-list
-               (if can-put?
-                    (cons (make-bombstate current-cor2 3 'P2) (gamestate-bomb gamestate))
-                    (gamestate-bomb gamestate))]
-              )
-         (make-gamestate
-          updated-layout
-          updated-bomb-list 
-          (gamestate-player1 gamestate)
-          (gamestate-player2 gamestate)
-          (gamestate-roundtimer gamestate)
-          (gamestate-maximum gamestate)
-          (gamestate-quit? gamestate)))]
-   
-      [else gamestate]))]))))
-
-
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;keyhandler;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (cond
+    [(string=? ke "q") (make-gamestate
+                        (gamestate-layout gamestate)
+                        (gamestate-bomb gamestate)
+                        (gamestate-player1 gamestate)
+                        (gamestate-player2 gamestate)
+                        (gamestate-roundtimer gamestate)
+                        (gamestate-maximum gamestate)
+                        #t)]
+    [(equal? (gamestate-layout gamestate) homepage) (if (string=? ke " ")
+                                                        initial-state
+                                                        gamestate)]
+    [else (let ([old-layout (gamestate-layout gamestate)])
+            (cond
+              [(string=? ke "down") (let* ([old-cor (player1-cor (gamestate-player1 gamestate))]
+                                           [old-symbol (get-symbol old-layout old-cor)])
+                                      (move-down gamestate old-cor old-symbol old-layout "1"))]
+              [(string=? ke "up") (let* ([old-cor (player1-cor (gamestate-player1 gamestate))]
+                                         [old-symbol (get-symbol old-layout old-cor)])
+                                    (move-up gamestate old-cor old-symbol old-layout "1"))]
+              [(string=? ke "left") (let* ([old-cor (player1-cor (gamestate-player1 gamestate))]
+                                           [old-symbol (get-symbol old-layout old-cor)])
+                                      (move-left gamestate old-cor old-symbol old-layout "1"))]
+              [(string=? ke "right") (let* ([old-cor (player1-cor (gamestate-player1 gamestate))]
+                                            [old-symbol (get-symbol old-layout old-cor)])
+                                       (move-right gamestate old-cor old-symbol old-layout "1"))]
+              [(string=? ke "s") (let* ([old-cor (player2-cor (gamestate-player2 gamestate))]
+                                        [old-symbol (get-symbol old-layout old-cor)])
+                                   (move-down gamestate old-cor old-symbol old-layout "2"))]
+              [(string=? ke "w") (let* ([old-cor (player2-cor (gamestate-player2 gamestate))]
+                                        [old-symbol (get-symbol old-layout old-cor)])
+                                   (move-up gamestate old-cor old-symbol old-layout "2"))]
+              [(string=? ke "a") (let* ([old-cor (player2-cor (gamestate-player2 gamestate))]
+                                        [old-symbol (get-symbol old-layout old-cor)])
+                                   (move-left gamestate old-cor old-symbol old-layout "2"))]
+              [(string=? ke "d") (let* ([old-cor (player2-cor (gamestate-player2 gamestate))]
+                                        [old-symbol (get-symbol old-layout old-cor)])
+                                   (move-right gamestate old-cor old-symbol old-layout "2"))]
+              [(string=? ke " ") (let* ([current-cor (player1-cor (gamestate-player1 gamestate))]
+                                        [current-direction (player1-direction (gamestate-player1 gamestate))]
+                                        [put? (put-predicate? gamestate current-cor 'P1)])
+                                   (if put?
+                                       (put-bomb gamestate old-layout current-cor current-direction "1")
+                                       gamestate))]
+              [(string=? ke "g") (let* ([current-cor (player2-cor (gamestate-player2 gamestate))]
+                                        [current-direction (player2-direction (gamestate-player2 gamestate))]
+                                        [put? (put-predicate? gamestate current-cor 'P2)])
+                                   (if put?
+                                       (put-bomb gamestate old-layout current-cor current-direction "2")
+                                       gamestate))]
+              [else gamestate]))]))

@@ -236,7 +236,7 @@
   (vector-ref
    (vector-ref layout (cor-row cor)) ;the row number
    (cor-column cor)) ;the column number
-  'ILEGAL)) ;else 'ILL
+  'ILEGAL)) ;else no
 
 ;cor layout -> Boolean
 (define (in-bound? cor layout)
