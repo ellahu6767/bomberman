@@ -57,30 +57,47 @@
           [(symbol=? symbol 'E2R) (overlay player2-image-R (bitmap "decorations/Boom.png"))])))
 
 
-; render-row:
-(define (render-row layout)
-  (let loop ( ;function name loop
-             [i 0] ;start: i=0
-             [acc empty-image] ;start: acc=empty-image
-             )
-    (if (>= i MAX-COLS)
-        acc
-        (loop (+ i 1)
-              (beside acc (render-cell (vector-ref layout i)))))))        
-;;Test---missing---
-
-; render-layout
-; layout -> Image
+;render-layout
+;Layout -> Image
+;Render the entire layout as an image
 (define (render-layout layout)
-  (let loop (
-             [i 0]
-             [acc empty-image]
-             )
-    (if (>= i MAX-ROWS)
-         acc
-        (loop (+ i 1) 
-              (above acc (render-row (vector-ref layout i)))))))
-;;Test---missing---
+  (local [(define (render-row row)
+            (let loop (
+                       [i 0] 
+                       [acc empty-image] 
+                       )
+              (if (>= i MAX-COLS)
+                  acc
+                  (loop (+ i 1)
+                        (beside acc (render-cell (vector-ref row i)))))))]
+    (let loop (
+               [i 0] 
+               [acc empty-image] 
+               )
+      (if (>= i MAX-ROWS)
+          acc
+          (loop (+ i 1)
+                (above acc (render-row (vector-ref layout i))))))))
+
+;;tests
+(define render-layout-tests
+  (test-suite "render-layout-tests"
+              (test-case "layout-all-W"
+                         (let (
+                               [layout-all-W
+                                (vector
+                                 (vector 'W 'W 'W)
+                                 (vector 'W 'W 'W)
+                                 (vector 'W 'W 'W))]
+                               )
+                           (above (beside (render-cell 'W) (render-cell 'W) (render-cell 'W))
+                                  (beside (render-cell 'W) (render-cell 'W) (render-cell 'W))
+                                  (beside (render-cell 'W) (render-cell 'W) (render-cell 'W)))))))
+
+(run-tests render-layout-tests)
+                                  
+                           
+
 
 ;convert-seconds-to-minutes-and-seconds-string:
 ;Number -> String
