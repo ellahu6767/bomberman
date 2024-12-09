@@ -238,8 +238,11 @@
   (vector-ref
    (vector-ref layout (cor-row cor)) ;the row number
    (cor-column cor)) ;the column number
+<<<<<<< HEAD
   'ILEGAL)) ;else no
-
+=======
+  'ILEGAL)) ;else 'ILEGAL
+>>>>>>> 4493f37a37ba7b53de0df755bb0fb7c95ccacd45
 
 ;in-bound?:
 
