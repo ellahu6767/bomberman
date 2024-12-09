@@ -35,13 +35,30 @@
 % 生成标题
 \maketitle
 
+\section{Libraries}
+\hspace{1.27cm}
+\\
+- \textbf{racekt/base}: mainly for importing other .rkt files into the big-bang.rkt file.\\
+- \textbf{2htdp-image}: for image manipulation and rendering, essential for visualizing the Gamestate.\\
+- \textbf{2htdp-universe}: mainly for using big-bang function.\\
+- \textbf{racket/vector}: allow more efficient operations on vectors, such as using vector-map.\\
+- \textbf{racket/system}: allow access to system-level operations, such as using terminal commands in Racket to open background music.\\
+- \textbf{racket/string}: mainly for string-contains?\\
+
 \section{Public}
 \hspace{1.27cm}This part contains data definitions, generate-layout function and its helper functions, some constant definitions and some public functions such as convert, get-symbol,in-bound?.
+
 \section{Render}
-\hspace{1.27cm}This section explains the rendering logic, including how the game layout, players, and other visual components are displayed on the screen.
+\hspace{1.27cm}
+This part contains the rendering logic, how the game will be shown as an image. \\
+- \textbf{render-cell}: each single cell is generated. \\
+- \textbf{render-layout}: a random layout is generated, recalls function \textbf{render-cell} in it.\\
+- \textbf{render}: the main function, which shows the whole game view. If the current layout of the game is the homepage layout, displays the homepage elements. If the layout is not the homepage, it proceeds to render the game page with a bar at the top of the game page generate by function \textbf{render-bar}, which displays the current round timer, maximum bomb count, and how many bombs each player has placed.
 
 \section{Keyhandler}
-\hspace{1.27cm}This section discusses the handling of user inputs (keyboard events), which affect player movement, bomb placement, and other game actions.
+\hspace{1.27cm}
+The main function is \textbf{keyhandler}, pressing q key will quit the game, pressing space key from homepage will enter the intial random generated layout; pressing "down" "up" "left" "right" player1 will move down, up, left, right; pressing "w" "a" "s" "d", player2 will move up, left, down, right; pressing space key in gamepage, player1 puts a bomb; pressing "g", player2 puts a bomb. \\
+In the main function, function \textbf{put-bomb} and function \textbf{move} are recalled to control the movement of player and the put-bomb action, function \textbf{move-predicate?} and funciton \textbf{put-predicate?} are recalled to restrict them according to the cell types and coordinates.
 
 \section{Timehandler}
 \hspace{1.27cm}The \textbf{timehandler} function serves as the core logic for the on-tick process, responsible for updating the game state at each tick. It first calls the \textbf{updated-layout} and \textbf{updated-bomb} functions to update the game layout and the countdown of bombs, while also handling the round timer and the maximum number of bombs by invoking \textbf{check-roundtimer?} and \textbf{add-maximum}. If any bomb's countdown reaches zero, it calls the \textbf{boom} function to handle chain explosion effects. Within \textbf{boom}, the \textbf{single-boom-range} function calculates the explosion range of a single bomb, and \textbf{extend-direction} extends the explosion range in all directions. Subsequently, the player and layout states are updated accordingly. Auxiliary functions such as \textbf{check-I?} and \textbf{check-D?} are used to determine whether a specific cell is an indestructible or destructible wall, while \textbf{chain-explosion} handles chain reactions and updates the bomb list. After processing in \textbf{boom} is complete, the \textbf{remove-bomb} function removes bombs that have already exploded. Through the close coordination of these functions, \textbf{timehandler} dynamically updates all critical game states at each tick.
@@ -51,9 +68,9 @@
 
 - \textbf{on-tick:} Calls the \textbf{timehandler} function to update the gamestate dynamically at each tick.
 
-- \textbf{on-key:} Invokes the keyhandler functions to process user inputs, such as player movements and bomb placements.
+- \textbf{on-key:} Invokes the \textbf{keyhandler} functions to process user inputs, such as player movements and bomb placements.
 
-- \textbf{to-draw:} Uses render functions to display the current game layout, including players, bombs, and other elements.
+- \textbf{to-draw:} Uses \textbf{render} functions to display the current game layout, including players, bombs, and other elements.
 
 - \textbf{stop-when:} Determines when the game should end by calling the \textbf{end?} function.
 

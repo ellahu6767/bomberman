@@ -102,6 +102,8 @@
 ;pressing space key from homepage will enter the intial random generated layout;
 ;pressing "down" "up" "left" "right" player1 will move down, up, left, right;
 ;pressing "w" "a" "s" "d", player2 will move up, left, down, right.
+;pressing space key in gamepage, player1 puts a bomb.
+;pressing "g", player2 puts a bomb.
 (define (keyhandler gamestate ke)
   (cond
     [(string=? ke "q") (make-gamestate
