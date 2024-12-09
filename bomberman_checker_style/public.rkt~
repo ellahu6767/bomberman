@@ -99,8 +99,8 @@
 
 ;interpretation:
 ;represents the cell location in the game
-;column is a Integer , represents the location of column
-;row is a Integer, represents the location of row
+;column is a nonnegative Integer from 0 to (- MAX-COLUMNS 1) , represents the location of column
+;row is a nonnegative Integer from 0 to (- MAX-ROWS 1), represents the location of row
 
 ;data examples
 (define exmaple-cor (make-cor 2 2))

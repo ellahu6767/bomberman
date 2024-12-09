@@ -12,164 +12,7 @@
 
 (provide (all-defined-out))
 
-;Row Col -> Boolean
-;rules for generating 'I in random-layout
-(define (is-I? row col)
-  (and (even? row)          
-       (odd? col)          
-       (< 0 row (- MAX-ROWS 1))                   
-       (< 0 col (- MAX-COLS 1))))
 
-;Row Col -> Boolean
-;rules for generating 'W1D in random-layout
-(define (is-player1? row col)
-  (= 0 (+ row col)))            
-
-;Row Col -> Boolean
-;rules for generating 'W2U in random-layout
-(define (is-player2? row col)
-  (= (+ (- MAX-ROWS 1) (- MAX-COLS 1)) (+ row col)))
-
-;row col -> Boolean
-;rules for generating fixed 'W in random-layout
-(define (is-fixed-W? row col)
-  (or (and
-       (< 0 (+ row col))
-       (<= (+ row col) 2)) 
-      (>= (+ row col) (+ (- MAX-ROWS 1) (- MAX-COLS 1) -2))))
-
-;row col -> Boolean
-;rules for generating 'D in homepage
-(define (is-YU? row col)
-  (or
-   ;;Y shape
-   (and
-    (<= 0 col 2)
-    (<= 0 row 2)
-    (= col row))
-   (and
-    (<  2 col 6)
-    (<= 0 row 2)
-    (<= 2 (- col row) 4)
-    (= (+ col row) 4))
-   (and
-    (= col 2)
-    (<= 2 row 4))
-   ;;U shape
-   (and
-    (= col 8)
-    (<= 0 row 4))
-   (and
-    (= col 12)
-    (<= 0 row 4))
-   (and
-    (= row 4)
-    (<= 8 col 12))))
-
-;row col -> Boolean
-;rules for generating 'I in homepage
-(define (is-HU? row col)
-  (or
-   ;;U shape
-   (and
-    (= col 8)
-    (<= 6 row 10))
-   (and
-    (= col 12)
-    (<= 6 row 10))
-   (and
-    (= row 10)
-    (<= 8 col 12))
-   ;;H shape
-   (and
-    (= col 0)
-    (<= 6 row 10))
-   (and
-    (= col 4)
-    (<= 6 row 10))
-   (and
-    (= row 8)
-    (<= 0 col 4))))
-
-;row col -> symbol
-;rules for generate homepage
-(define (homepage-rule row col)
-  (cond
-    [(is-YU? row col) 'D]
-    [(is-HU? row col) 'B]
-    [else 'W]))
-
-;row col -> symbol
-;rules for generate random-layout
-(define (random-layout-rule row col)
-  (cond
-    [(is-player1? row col) 'W1D] ;generate the player1 at the top-left corner
-    [(is-player2? row col) 'W2U] ;generate the player2 at the top-right corner
-    [(is-I? row col) 'I] ;generate the fixed indestructible cell
-    [(is-fixed-W? row col) 'W] ;generate the safe starting area :` and .: 
-    [else (if (zero? (random 2)) 'D 'W)])) ;generate the random cell, destructible if 0, walkable if 1
-
-;row col acc rule-fn -> vector of symbol
-;generate row
-(define (generate-row row col acc rule-fn)
-  (if (= col MAX-COLS) ;if one row comes to the end
-      (list->vector (reverse acc)) ;transform the acc list to vector
-      (generate-row ;else
-       row ;the row don't change
-       (+ col 1) ;move to the next cell on the same row
-       (cons (rule-fn row col) acc) ;new accumulator
-       rule-fn)))
-;;Test---missing---
-
-;row acc rule-fn -> vector of vector of symbol
-;generate layout
-(define (generate-layout row acc rule-fn)
-  (if (= row MAX-ROWS) ;if all rows come the end
-      (list->vector (reverse acc))  ;tranform the list to vector
-      (generate-layout ;else
-       (+ row 1) ;change to the next row
-       (cons (generate-row row 0 '() rule-fn) acc) ;column starts from 0, acc starts from '()
-       rule-fn)))
-;;Test---missing---
-
-;homepage vector and random-layout vector
-(define homepage (generate-layout 0 '() homepage-rule))
-(define random-layout (generate-layout 0 '() random-layout-rule))
-
-;initial gamestate
-(define initial-state
-  (make-gamestate
-   random-layout
-   '()
-   initial-player1
-   initial-player2
-   initial-roundtimer
-   initial-maximum
-  #f))
-
-;homepage gamestate
-(define homepage-state
-  (make-gamestate
-   homepage
-   '()
-   #f
-   #f
-   #f
-   #f
-  #f))
-;constant definitions
-(define SPACE (square 30 0 "white"))
-(define CELL-SIZE (image-width (bitmap "decorations/W.png"))) 
-
-(define player1-image-D (bitmap "decorations/P1D.png"))
-(define player1-image-U (bitmap "decorations/P1U.png"))
-(define player1-image-L (bitmap "decorations/P1L.png"))
-(define player1-image-R (bitmap "decorations/P1R.png"))
-
-(define player2-image-D (bitmap "decorations/P2D.png"))
-(define player2-image-U (bitmap "decorations/P2U.png"))
-(define player2-image-L (bitmap "decorations/P2L.png"))
-(define player2-image-R (bitmap "decorations/P2R.png"))
 
 ; render-cell
 ; symbol -> Image
@@ -179,8 +22,7 @@
           [(symbol=? symbol 'D) (bitmap "decorations/D.png")]
           [(symbol=? symbol 'I) (bitmap "decorations/I.png")]
           [(symbol=? symbol 'W) (bitmap "decorations/W.png")]
-          [(symbol=? symbol 'B) (bitmap "decorations/B.png")]
-          [(symbol=? symbol 'E2) (bitmap "decorations/E.png")]
+          [(symbol=? symbol 'B) (overlay (bitmap "decorations/B.png") (bitmap "decorations/W.png"))]
           [(symbol=? symbol 'E1) (bitmap "decorations/E.png")]
           [(symbol=? symbol 'E0) (bitmap "decorations/E.png")]
 
@@ -269,13 +111,6 @@
    (text (string-append "Maximum bomb: " (number->string maximum)) 30 "indigo")
    SPACE
    (text (string-append "P2: " (number->string owner2)) 30 "indigo")))
-
-;count-num
-(define (count-num list-of-bomb)
-  (cond
-    [(empty? list-of-bomb) 0]
-    [else
-     (add1 (count-num (rest list-of-bomb)))]))
  
 ;homepage-bar     
 (define homepage-bar

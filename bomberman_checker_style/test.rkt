@@ -5,7 +5,6 @@
 (require "public.rkt")
 (require "on_tick.rkt")
 (require "stop_when.rkt")
-(require "render.rkt")
 (require rackunit)
 (require rackunit/text-ui)
 
@@ -979,16 +978,61 @@
                              #f)])
         (check-false (end? example-state))))))
 
-    
+
+(define generate-random-layout-tests
+  (test-suite
+   "testing random-layout"
+   (let ([layout (generate-layout 0 '() random-layout-rule)])
+     (test-case "check fixed player1"
+                (check-equal? (get-symbol layout (cor 0 0)) 'W1D))
+     (test-case "check fixed player2"
+                (check-equal? (get-symbol layout (cor (- MAX-COLS 1) (- MAX-ROWS 1))) 'W2U))
+     (test-case "check fixed 'W"
+                (begin
+                  (check-equal? (get-symbol layout (cor 0 1)) 'W)
+                  (check-equal? (get-symbol layout (cor 1 0)) 'W)
+                  (check-equal? (get-symbol layout (cor 1 1)) 'W)
+                  (check-equal? (get-symbol layout (cor (- MAX-COLS 2) (- MAX-ROWS 2))) 'W)
+                  (check-equal? (get-symbol layout (cor (- MAX-COLS 2) (- MAX-ROWS 1))) 'W)
+                  (check-equal? (get-symbol layout (cor (- MAX-COLS 1) (- MAX-ROWS 2))) 'W)))
+     (test-case "check fixed 'I"
+                (for ([row (in-range MAX-ROWS)]
+                      [col (in-range MAX-COLS)])
+                  (when (is-I? row col)
+                    (check-equal? (vector-ref (vector-ref layout row) col) 'I))))
+     (test-case "check remaining cells are 'W or 'D"
+           (for ([row (in-range MAX-ROWS)]
+                 [col (in-range MAX-COLS)])
+             (unless (or (is-I? row col)
+                         (is-player1? row col)
+                         (is-player2? row col)
+                         (is-fixed-W? row col))
+               (let ([value (vector-ref (vector-ref layout row) col)])
+                 (check-true
+                  (or (equal? value 'W)
+                      (equal? value 'D))))))))))
 
 
-
- 
-
-
-
-
-
+(define generate-homepage-layout-tests
+  (test-suite
+   "testing homepage"
+   (let ([layout homepage])
+     (test-case "check 'D in YU shape"
+                (for ([row (in-range MAX-ROWS)]
+                      [col (in-range MAX-COLS)])
+                  (when (is-YU? row col)
+                    (check-equal? (vector-ref (vector-ref layout row) col) 'D))))
+     (test-case "check 'B in HU shape"
+                (for ([row (in-range MAX-ROWS)]
+                      [col (in-range MAX-COLS)])
+                  (when (is-HU? row col)
+                    (check-equal? (vector-ref (vector-ref layout row) col) 'B))))
+     (test-case "check remaining cells are 'W"
+                (for ([row (in-range MAX-ROWS)]
+                      [col (in-range MAX-COLS)])
+                  (unless (or (is-YU? row col)
+                              (is-HU? row col))
+                    (check-equal? (vector-ref (vector-ref layout row) col) 'W)))))))
 
 
 (define test-all
@@ -1015,7 +1059,9 @@
     boom-tests
     in-game-tests
     check-died?-tests
-    end?-tests))
+    end?-tests
+    generate-random-layout-tests
+    generate-homepage-layout-tests))
 
 
 

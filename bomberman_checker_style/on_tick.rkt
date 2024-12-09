@@ -7,7 +7,6 @@
 (require racket/system)
 (require racket/base)
 (require "public.rkt")
-(require "render.rkt")
 
 (provide (all-defined-out))
 

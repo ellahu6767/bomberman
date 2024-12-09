@@ -8,7 +8,6 @@
 (require racket/base)
 (require racket/string)
 (require "public.rkt")
-(require "render.rkt")
 
 (provide (all-defined-out))
 
