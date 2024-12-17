@@ -1,3 +1,7 @@
+The maze and cheat code system were not implemented in this version because the maze map requires a larger size, which necessitates adding new functionality to allow Racket to dynamically adjust the world window based on different dimensions.So the maze cannot be added now. Additionally, we did not want to include the cheat code system in the PvP mode.
+
+Since we only realized at the last minute before submitting the project that the README needed to be in .txt format, we had originally used LaTeX. Therefore, if anyone truly wishes to see the full README, we recommend opening readme.pdf to get better reading experience.
+----------------------update in 2024.12.17-------------------------------------
 Bomberman Game
 
 Team Members
